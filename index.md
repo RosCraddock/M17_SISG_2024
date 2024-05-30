@@ -2,12 +2,25 @@ This site contains course materials for SISG Module 17: WGS Data Analysis, June 
 
 - **Instructors:** Laura Raffield and Matthew Conomos
 
+## Course Description
+This module will provide an introduction to analyzing genotype data generated from whole genome sequencing (WGS). It will focus on extensions of standard GWAS analyses (e.g. rare-variant association tests) and “post-GWAS” follow-up analyses (e.g. conditional analysis, fine-mapping), and how WGS may improve results or be best utilized for these analyses; methods that incorporate variant annotation information will be highlighted.
+
+Methods and examples will be informed by the instructors’ experience in large human genetics consortia (e.g. TOPMed), and, therefore, will focus on analyzing human data, but may be applicable/extendable to other organisms. A basic introduction to cloud computing will be provided, and students will perform hands-on exercises on a genomic analysis cloud platform.
+
+### Learning Objectives
+After attending this module, participants will be able to: 
+1. Understand how to perform association analyses for rare variants measured in WGS data using aggregate tests
+2. Access variant annotation resources and understand how to incorporate annotation information into analyses to improve power and inform results
+3. Understand the theory of, and how and when to perform, various “post-GWAS” follow-up analyses 
+4. Leverage multi-ancestry WGS data
+5. Appreciate the utility of existing genomic analysis cloud platforms and get hands-on experience with cloud computing on one of these platforms
+
 ## Course Format
 
-#### Lectures
+### Lectures
 Course material will be presented through lectures. Slides for lectures are linked in the schedule below.
 
-#### Exercises
+### Exercises
 Many of the lectures will be followed with hands-on exercises. Students are encouraged to work through the exercises together. Afterwards, the instructors will walk through the exercises and lead a discussion.
 
 To run the exercises, log into [NHLBI BioData Catalyst powered by Seven Bridges](https://platform.sb.biodatacatalyst.nhlbi.nih.gov) with your username and password -- we will use this platform for live demonstrations during the course.
