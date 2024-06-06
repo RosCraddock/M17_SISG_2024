@@ -241,7 +241,7 @@ The SMMAT test found two significant genes, ENSG00000253184 and ENSG00000251354,
 
 ## Exercise 6.1 (Application)
 
-Use the `GENESIS Aggregate Association Testing` app on the BioData Catalyst powered by Seven Bridges platform to perform gene-based burden tests for trait_1 using the null model previously fit in the `02_GWAS.Rmd` tutorial. Only include variants with alternate allele frequency < 1% and use the Wu weights to upweight rarer variants. Use the genotype data in the genome-wide GDS files you created previously. \n
+Use the `GENESIS Aggregate Association Testing` app on the BioData Catalyst powered by Seven Bridges platform to perform gene-based SMMAT tests for trait_1 using the null model previously fit in the `02_GWAS.Rmd` tutorial. Only include variants with alternate allele frequency < 1% and use the Wu weights to upweight rarer variants. Use the genotype data in the genome-wide GDS files you created previously. \n
 
 The `GENESIS Aggregate Association Testing` app currently requires Variant group files that are RData data.frames (i.e. our GRanges objects with gene defintions will not work). Fortunately, it is easy to transform our GRanges object to the required data.frame. The files you need to run the application are already in the project files on the SBG platform. 
 
@@ -275,9 +275,9 @@ The steps to perform this analysis are as follows:
     - aggregate_list > Aggregate type: position
     - assoc_aggregate > Alt Freq Max: 0.01
     - assoc_aggregate > Memory GB: 32 (increase to make sure enough available)
-    - assoc_aggregate > Test: burden
+    - assoc_aggregate > Test: smmat
     - assoc_aggregate > Weight Beta: "1 25"
-    - Output prefix: "1KG_trait_1_burden" (or any other string to name the output file)
+    - Output prefix: "1KG_trait_1_smmat" (or any other string to name the output file)
     - GENESIS Association results plotting > Plot MAC threshold: 5
   - Click: Run
   
@@ -285,12 +285,13 @@ The analysis will take a few minutes to run. You can find your analysis in the T
 
 The output of this analysis will be 22 `<output_prefix>_chr<CHR>.RData` files with the association test results for each chromosome as well as a `<output_prefix>_manh.png` file with the Manhattan plot and a `<output_prefix>_qq.png` file with the QQ plot. Review the Manhattan plot -- are there any significant gene associations?
 
-You can find the expected output of this analysis by looking at the existing task `11 Burden Association Test trait_1` in the Tasks menu of your Project. The output files are available in the Project, so you do not need to wait for your analysis to finish to look at the output.
+You can find the expected output of this analysis by looking at the existing task `11 SMMAT Association Test trait_1` in the Tasks menu of your Project. The output files are available in the Project, so you do not need to wait for your analysis to finish to look at the output.
 
 
 ## Exercise 6.2 (Data Studio)
 
-After running an Application, you may want to load the results into RStudio to explore them interactively. All of the output files are saved in the directory `/sbgenomics/project-files/`. Load the chr 8 burden results into RStudio and find the significant genes.  
+After running an Application, you may want to load the results into RStudio to explore them interactively. All of the output files are saved in the directory `/sbgenomics/project-files/`. Load the chromosome 8 SMMAT results into RStudio and find the significant genes.  
+
 ```{r}
 # your solution here 
 #
@@ -306,21 +307,21 @@ After running an Application, you may want to load the results into RStudio to e
 
 ### Solution 6.2 (Data Studio)
 
-After running an Application, you may want to load the results into RStudio to explore them interactively. All of the output files are saved in the directory `/sbgenomics/project-files/`. Load the chr 8 burden results into RStudio and find the significant genes.
+After running an Application, you may want to load the results into RStudio to explore them interactively. All of the output files are saved in the directory `/sbgenomics/project-files/`. Load the chromosome 8 SMMAT results into RStudio and find the significant genes.
 
 ```{r, eval = FALSE}
 # load
-assoc <- get(load('/sbgenomics/project-files/1KG_trait_1_burden_chr8.RData'))
+assoc <- get(load('/sbgenomics/project-files/1KG_trait_1_smmat_chr8.RData'))
 names(assoc)
 
 head(assoc$results)
 
 # filter to cumulative MAC >= 5
-burden <- assoc$results[assoc$results$n.alt >= 5, ]
+smmat <- assoc$results[assoc$results$n.alt >= 5, ]
 
 # significant genes
-burden[burden$Score.pval < 0.05/nrow(burden), ]
+smmat[smmat$pval_SMMAT < 0.05/nrow(smmat), ]
 ```
 
-Gene ENSG00000186510.7 has the smallest burden p-value ($p = 4.8x10^{-4}$).
+Gene ENSG00000253184 has SMMAT $p = 4.3x10^{-4}$, and gene ENSG00000251354 has SMMAT $p = 3.6x10^{-6}$.
 

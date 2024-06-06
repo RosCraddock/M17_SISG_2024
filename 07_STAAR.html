@@ -431,15 +431,16 @@ analysis are as follows:</p>
 <div id="exercise-7.1-application" class="section level2">
 <h2>Exercise 7.1 (Application)</h2>
 <p>First, run the <code>FAVORannotator</code> app on an example GDS file
-– perhaps chromosome 19. This app runs one chromosome at a time.</p>
+– for the STAAR exercises we have provided a smaller chromosome 19
+subset GDS in the interest of making these run more quickly. This app
+runs one chromosome at a time.</p>
 <ul>
 <li>Run the analysis in your project:
 <ul>
 <li>Click: Apps &gt; <code>FAVORannotator</code> &gt; Run</li>
 <li>Specify the Inputs:
 <ul>
-<li>GDS file:
-<code>1KG_phase3_subset_1KG_phase3_subset_chr19_pruned.gds</code></li>
+<li>GDS file: <code>1KG_phase3_STAAR_subset_chr19.gds</code></li>
 <li>FAVOR database for specific chromosome:
 <code>FAVOR_chr19.tar.gz</code> (provided at link above by STAAR package
 creators)</li>
@@ -450,9 +451,8 @@ package creators)</li>
 <li>Specify the App Settings:
 <ul>
 <li>Chromosome: 19</li>
-<li>Output file prefix:
-“1KG_phase3_subset_1KG_phase3_subset_chr19_pruned_favor” (or any other
-string to name the output file)</li>
+<li>Output file prefix: “1KG_phase3_STAAR_subset_chr19_favor” (or any
+other string to name the output file)</li>
 </ul></li>
 </ul></li>
 </ul>
@@ -462,9 +462,9 @@ example, but could be altered depending on cohort size, etc.</p>
 run the task. The output of this task would be an annotated GDS file
 named <code>&lt;output_prefix&gt;.gds</code>. You can find the expected
 output of this task by looking at the existing task
-<code>11. STAARexercise_FAVORannotator_chr19_example</code> in the Tasks
-menu of your Project. We will utilize the pre-provided output file
-available in the Project for the next steps.</p>
+<code>12 STAARexercise FAVORannotator Chr19</code> in the Tasks menu of
+your Project. We will utilize the pre-provided output file available in
+the Project for the next steps.</p>
 </div>
 <div id="exercise-7.2-application" class="section level2">
 <h2>Exercise 7.2 (Application)</h2>
@@ -483,21 +483,18 @@ pipeline already covered, so is not a part of this exercise.</p>
 <li>Click: Apps &gt; <code>STAARpipeline</code> &gt; Run</li>
 <li>Specify the Inputs:
 <ul>
-<li>GDS files:
-<code>1KG_phase3_subset_1KG_phase3_subset_chr19_pruned_favor.gds</code>
-(in a real analysis, you would select all 22 chromosomes)</li>
 <li>Annotation name catalog:
 <code>Annotation_name_catalog.csv</code></li>
 <li>Phenotype file: <code>mock_phenotype_SISG.csv</code></li>
 </ul></li>
 <li>Specify the App Settings:
 <ul>
-<li>Phenotype: phenotype</li>
-<li>Covariates: age, sex (again, in a real analysis, you would want to
+<li>Column name of outcome variable: phenotype</li>
+<li>Covariates: age,sex (again, in a real analysis, you would want to
 include a kinship matrix and ancestry principal components)</li>
-<li>Test type: Null</li>
-<li>Output file prefix: “chr19_region_null” (or any other string to name
-the output file)</li>
+<li>Test type: Null (i.e. only fit the null model)</li>
+<li>Output file prefix: “STAAR_chr19_region_null” (or any other string
+to name the output file)</li>
 </ul></li>
 <li>Click: Run</li>
 </ul></li>
@@ -510,7 +507,7 @@ see the results once it has completed.</p>
 <p>The output file for this null model task is
 <code>&lt;output_prefix&gt;.Rdata</code>, a null model data object.</p>
 <p>You can find the expected output of this analysis by looking at the
-existing task <code>12. STAARexercise_nullmodel_chr19</code> in the
+existing task <code>13 STAARexercise Null Model Chr19</code> in the
 Tasks menu of your Project. The output files are available in the
 Project, so you do not need to wait for your analysis to finish to look
 at the output.</p>
@@ -523,18 +520,18 @@ at the output.</p>
 <li>Click: Apps &gt; <code>STAARpipeline</code> &gt; Run</li>
 <li>Specify the Inputs:
 <ul>
-<li>GDS files:
-<code>1KG_phase3_subset_1KG_phase3_subset_chr19_pruned_favor.gds</code></li>
+<li>GDS files: <code>1KG_phase3_STAAR_subset_chr19_favor.gds</code> (in
+a real analysis, you would select all 22 chromosomes)</li>
 <li>Annotation name catalog:
 <code>Annotation_name_catalog.csv</code></li>
-<li>Null model: <code>chr19_region_null.Rdata</code></li>
+<li>Null model: <code>STAAR_chr19_region_null.Rdata</code></li>
 </ul></li>
 <li>Specify App Settings:
 <ul>
 <li>Sliding window size (bp) to be used in sliding window test:
 5000</li>
-<li>Output file prefix: “region_sliding_5kb_chr19” (or any other string
-to name the output file)</li>
+<li>Output file prefix: “STAAR_region_sliding_5kb_chr19” (or any other
+string to name the output file)</li>
 <li>Test type: Sliding_Window</li>
 </ul></li>
 <li>Click: Run</li>
@@ -552,9 +549,8 @@ results once it has completed.</p>
 <code>&lt;output_prefix&gt;.Rdata</code>, which contains the STAAR
 association results.</p>
 <p>You can find the expected output of this analysis by looking at the
-existing task
-<code>13. STAARexercise_STAARpipeline_run_sliding_5kb</code> in the
-Tasks menu of your Project. The output files are available in the
+existing task <code>14 STAARexercise Sliding Window 5kb Chr19</code> in
+the Tasks menu of your Project. The output files are available in the
 Project, so you do not need to wait for your analysis to finish to look
 at the output.</p>
 </div>
@@ -573,13 +569,13 @@ Run</li>
 <li>Annotation name catalog:
 <code>Annotation_name_catalog.csv</code></li>
 <li>Input array results:
-<code>region_sliding_5kb_chr19.Rdata</code></li>
+<code>STAAR_region_sliding_5kb_chr19.Rdata</code></li>
 </ul></li>
 <li>Specify App Settings:
 <ul>
-<li>Output file prefix: “result_sliding_5kb_chr19” (or any other string
-to name the output file)</li>
-<li>Prefix of input results: “region_sliding_5kb_chr”</li>
+<li>Output file prefix: “STAAR_region_sliding_5kb_chr19” (or any other
+string to name the output file)</li>
+<li>Prefix of input results: “STAAR_region_sliding_5kb_chr19”</li>
 <li>Test type: Sliding_Window</li>
 </ul></li>
 <li>Click: Run</li>
@@ -589,14 +585,14 @@ analysis in the Tasks menu of your Project to check on its progress and
 see the results once it has completed.</p>
 <p>You can find the expected output of this analysis by looking at the
 existing task
-<code>14. STAARexercise_STAARpipelineSummary_VarSet_sliding5kb</code> in
-the Tasks menu of your Project. The output files are available in the
+<code>15 STAARexercise Summary Sliding Window 5kb Chr19</code> in the
+Tasks menu of your Project. The output files are available in the
 Project, so you do not need to wait for your analysis to finish to look
 at the output.</p>
 <p>The output from this task is
-<code>&lt;output_prefix&gt;_results_sliging_window_genome.Rdata</code>
+<code>&lt;output_prefix&gt;_results_sliding_window_genome.Rdata</code>
 and
-<code>&lt;output_prefix&gt;_results_sliging_window_genome_sig.csv</code>.
+<code>&lt;output_prefix&gt;_results_sliding_window_genome_sig.csv</code>.
 Do note that the second file “sig”, i.e. significant test files in this
 analysis, are empty - which is good/anticipated with a randomly
 generated phenotype!</p>
@@ -627,15 +623,14 @@ Run</li>
 <ul>
 <li>Annotation name catalog:
 <code>Annotation_name_catalog.csv</code></li>
-<li>AGDS file:
-<code>1KG_phase3_subset_1KG_phase3_subset_chr19_pruned_favor.gds</code></li>
-<li>Null model: <code>chr19_region_null.Rdata</code></li>
+<li>AGDS file: <code>1KG_phase3_STAAR_subset_chr19_favor.gds</code></li>
+<li>Null model: <code>STAAR_chr19_region_null.Rdata</code></li>
 </ul></li>
 <li>Specify App Settings:
 <ul>
 <li>Chromosome: 19</li>
 <li>End location: 45668803</li>
-<li>Output file prefix: “slidingwindow_indvar_19_45663804” (or any other
+<li>Output file prefix: “STAAR_sliding_indvar_19_45663804” (or any other
 string to name the output file)</li>
 <li>Start location: 45663804</li>
 <li>Test type: Sliding_Window</li>
@@ -646,10 +641,10 @@ string to name the output file)</li>
 analysis in the Tasks menu of your Project to check on its progress and
 see the results once it has completed.</p>
 <p>The output from this analysis will be
-<code>&lt;output_prefix&gt;csv</code>.</p>
+<code>&lt;output_prefix&gt;.csv</code>.</p>
 <p>You can find the expected output of this analysis by looking at the
-existing task <code>15. STAARexercise_STAARpipelineSummary_IndVar</code>
-in the Tasks menu of your Project. The output files are available in the
+existing task <code>16 STAARexercise Summary IndVar Chr19</code> in the
+Tasks menu of your Project. The output files are available in the
 Project, so you do not need to wait for your analysis to finish to look
 at the output.</p>
 </div>
