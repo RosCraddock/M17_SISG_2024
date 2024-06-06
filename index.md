@@ -39,9 +39,9 @@ NOTE: All times are Eastern Daylight Time (GMT-04:00)
 | Time | Topic | Lecture | Exercises/Discussion |
 | --- | --- | --- | --- |
 | 1:30pm-1:35pm | Introduction | Slides | |
-| 1:35pm-3:00pm | Intro to Cloud Computing for WGS Data Analysis | [Slides] | |
+| 1:35pm-3:00pm | Intro to Cloud Computing for WGS Data Analysis | [Slides](https://docs.google.com/presentation/d/1SVbxImtUE0VsEHzl8mpj2oXBdT_Alw8twkj1CX8efLY/preview?slide=id.p) | [.Rmd](https://github.com/UW-GAC/SISG_2024/blob/main/01_gds_intro.Rmd) [.html](https://github.com/UW-GAC/SISG_2024/blob/main/01_gds_intro.html) |
 | 3:00pm-3:30pm | _Coffee Break_ | | |
-| 3:30pm-5:00pm | GWAS | [Slides] | [Slides] [.html] |
+| 3:30pm-5:00pm | GWAS | [Slides](https://drive.google.com/file/d/1QvaRc5n1TI85qPAHTj3SuKRWYo1Flmaf/view?usp=drive_link) | [.Rmd](https://github.com/UW-GAC/SISG_2024/blob/main/02_GWAS.Rmd) [.html](https://github.com/UW-GAC/SISG_2024/blob/main/02_GWAS.html) |
 
 **Thursday, June 13th**
 
