@@ -1,0 +1,326 @@
+# 6. Aggregate Association Tests
+
+Multi-variant association tests, which are commonly used for testing rare variants in aggregate, can be used to identify when variants in a genomic region (e.g. a gene), potentially with certain properties defined by variant annotation, are associated with a phenotype of interest. Under certain assumptions, these aggregate tests can improve statistical power to detect association when single variant tests are under-powered and/or poorly calibrated. This tutorial demonstrates how to perform aggregate multi-variant association tests using the [GENESIS](https://bioconductor.org/packages/release/bioc/html/GENESIS.html) R/Bioconductor package. 
+
+## Aggregation Units for Association Testing
+
+In this tutorial, we will be using a subset of genes from chromosome 8 as our aggregation units. We use Gencode v38 gene boundaries in genome build GRCh38/hg38 and label genes by their Ensembl gene IDs. It is important to use aggregation units based on the genome build consistent with your sample genotype data. The gene boundaries are provided in a `GRanges` object, which is constructed with the GenomicRanges R/Bioconductor package.
+
+```{r, message = FALSE}
+repo_path <- "https://github.com/UW-GAC/SISG_2022/raw/main"
+if (!dir.exists("data")) dir.create("data")
+
+library(GenomicRanges)
+
+genefile <- "data/gencode.v38.hg38_ENSG_GRanges_subset_chr8.RData"
+if (!file.exists(genefile)) download.file(file.path(repo_path, genefile), genefile)
+genes <- get(load(genefile))
+genes
+
+# number of genes
+length(genes)
+```
+
+In the `GRanges` object, the `seqnames` field provides the chromosome value and the `ranges` field provides the gene boundaries. The metadata also includes `strand` direction and `gene` names. Each entry in the object is labeled by the Ensembl gene ID (e.g. ENSG00000253764). \n
+
+## Aggregate Association Tests
+
+As we saw in the lecture, there are many different types of multi-variant association tests. We can perform burden, SKAT, SKAT-O, fastSKAT, or SMMAT tests using the same `assocTestAggregate` function from GENESIS. When performing multi-variant association tests with GENESIS, the process is *very* similar to performing single variant association tests.
+
+### Prepare the Data
+
+First, we load the `AnnotatedDataFrame` with the phenotype data, open a connection to the GDS file with the genotype data, and create our `SeqVarData` object linking the two. This is exactly the same as the previous tutorials.
+
+```{r, message = FALSE}
+# open the GDS file
+library(SeqVarTools)
+
+gdsfile <- "data/1KG_phase3_GRCh38_subset_chr8.gds"
+if (!file.exists(gdsfile)) download.file(file.path(repo_path, gdsfile), gdsfile)
+gdsfmt::showfile.gds(closeall=TRUE) # make sure file is not already open
+gds <- seqOpen(gdsfile)
+
+# sample annotation file
+annotfile <- "data/pheno_annotated_pcs.RData"
+if (!file.exists(annotfile)) download.file(file.path(repo_path, annotfile), aggfile)
+annot <- get(load(annotfile))
+
+# make the seqVarData object
+seqData <- SeqVarData(gds, sampleData=annot)
+```
+
+When performing aggregate tests using gene boundaries in a `GRanges` object, we define a `SeqVarRangeIterator` object where each list element is a gene aggregation unit. This is the only difference in the data preparation process from what we saw in previous tutorials. 
+
+```{r}
+# construct the iterator using the SeqVarRangeIterator function
+iterator <- SeqVarRangeIterator(seqData, variantRanges=genes, verbose=FALSE)
+iterator
+```
+
+### Null Model
+
+As with the single variant association tests, multi-variant association tests require that we first fit a null model. In most cases, you will want to use *exactly* the same null model for both single and multi-variant tests. We load the same null model for trait_1 that we fit and saved in the `02_GWAS.Rmd` tutorial.
+
+```{r}
+# load the null model
+nullmodfile <- "data/null_model_trait1.RData"
+if (!file.exists(nullmodfile)) download.file(file.path(repo_path, nullmodfile), nullmodfile)
+nullmod <- get(load(nullmodfile))
+
+# summary
+nullmod$model
+```
+
+
+### Burden Test 
+
+First, we perform a burden test. We restrict the test to variants with alternate allele frequency < 0.01. We use a uniform weighting scheme -- i.e. every variant gets the same weight (a Beta(1,1) distribution is a uniform distribution). The `assocTestAggregate` function iterates over all aggregation units (i.e. genes) in the `SeqVarRangeIterator` object. 
+
+```{r assoc_burden}
+# run the burden test
+library(GENESIS)
+assoc.burden <- assocTestAggregate(iterator, 
+                                   null.model = nullmod,
+                                   test = "Burden", 
+                                   AF.max = 0.01, 
+                                   weight.beta = c(1,1))
+names(assoc.burden)
+```
+
+The function returns the primary results for each aggregation unit in one table (`results`). It also returns a list of tables that contain the variant details for each aggregation unit tested (`variantInfo`).
+
+```{r}
+# results for each aggregation unit
+class(assoc.burden$results)
+dim(assoc.burden$results)
+head(assoc.burden$results)
+```
+
+Each row of the `results` data.frame represents one tested aggregation unit and includes: the number of variants/sites included (`n.site`), the total number of alternate alleles observed across all samples in those variants (`n.alt`), the total number of samples with at least one alternate allele observed at some variant (`n.sample.alt`), the burden score value (`Score`) and its standard error (`Score.SE`), the burden score test statistic (`Score.Stat`) and $p$-value (`Score.pval`), an approximation of the burden effect size (`Est`) and its standard error (`Est.SE`), and an approximation of the proportion of variation explained by the burden (`PVE`). 
+
+```{r}
+# variant info per aggregation unit
+class(assoc.burden$variantInfo)
+head(assoc.burden$variantInfo[[1]])
+```
+
+The `variantInfo` for each aggregation unit includes: variant information (`variant.id`, `chr`, and `pos`), the number of samples included (`n.obs`), the minor allele count (`MAC`), the effect allele frequency (`freq`), and the weight assigned to that variant (`weight`). \n
+
+When performing aggregate tests, we usually want to filter our aggregation units where the cumulative number of minor alleles (i.e. cumulative MAC) across all samples and variants is below some threshold. Similarly to how single variant tests are not well calibrated when a variant is very rare, these aggregate tests are not well calibrated when the cumulative MAC is very small. The `n.alt` values the `assocTestAggregate` output gives the total number of alternate alleles observed across all samples and variants in the aggregation unit. Filter the output to only genes with at least 5 alternate alleles observed across all samples and variants.
+
+```{r}
+burden <- assoc.burden$results[assoc.burden$results$n.alt >= 5, ]
+dim(burden)
+```
+
+When performing aggregate tests, we typically use a Bonferroni correction for the number of aggregation units tested to account for multiple testing. In other words, we use a less stringent $p$-value threshold than the genome-wide significant threshold used for single variant GWAS. Check for significant burden associations.
+
+```{r}
+burden[burden$Score.pval < 0.05/nrow(burden), ]
+```
+We have one significant burden association at ENSG00000251354 with $p = 1.6 \times 10^{-5}$. We can also make a QQ plot of the burden p-values from the main results table
+
+```{r}
+library(ggplot2)
+qqPlot <- function(pval) {
+    pval <- pval[!is.na(pval)]
+    n <- length(pval)
+    x <- 1:n
+    dat <- data.frame(obs=sort(pval),
+                      exp=x/n,
+                      upper=qbeta(0.025, x, rev(x)),
+                      lower=qbeta(0.975, x, rev(x)))
+    
+    ggplot(dat, aes(-log10(exp), -log10(obs))) +
+        geom_line(aes(-log10(exp), -log10(upper)), color="gray") +
+        geom_line(aes(-log10(exp), -log10(lower)), color="gray") +
+        geom_point() +
+        geom_abline(intercept=0, slope=1, color="red") +
+        xlab(expression(paste(-log[10], "(expected P)"))) +
+        ylab(expression(paste(-log[10], "(observed P)"))) +
+        theme_bw()
+}    
+
+qqPlot(burden$Score.pval)
+```
+
+Note: QQ plots for multi-variant tests are often not as clean as for single variant GWAS, particularly in the lower part of the plot (i.e. insignificant $p$-values near to $-log_{10}(p) = 0$). However, the QQ plot can still be useful to assess egregious issues. 
+
+### SKAT Test 
+
+We can also perform a SKAT test. This time, we will use the Wu weights (i.e. drawn from a Beta(1,25) distribution), which give larger weights to rarer variants (note the different weight values in the `variantInfo` output).
+
+```{r assoc_skat, message = FALSE}
+# reset the iterator to the first window
+resetIterator(iterator, verbose = FALSE)
+
+# run the SKAT test
+assoc.skat <- assocTestAggregate(iterator, 
+                                 null.model = nullmod, 
+                                 test = "SKAT", 
+                                 AF.max = 0.01, 
+                                 weight.beta = c(1,25))
+```
+
+```{r}
+# results for each aggregation unit
+head(assoc.skat$results)
+```
+
+Again, each row of the `results` data.frame represents one tested aggregation unit. Some of the columns are the same as for the burden test; new columns include: the SKAT statistic (`Q`), the SKAT $p$-value (`pval`), the $p$-value method used (`pval.method`), and an indicator if there was any error detected in computing the $p$-value (`err`). If any aggregation units indicate an error (value = 1), they should be dropped from the results. Note that there is no effect size provided, as there is no such concept for SKAT. 
+
+```{r}
+table(assoc.skat$results$pval.method, assoc.skat$results$err, exclude = NULL)
+```
+
+```{r}
+# variant info per aggregation unit 
+head(assoc.skat$variantInfo[[3]])
+```
+
+The `variantInfo` for each aggregation unit includes the same information as for the burden test, but note the different variant weight values due to using the Wu weights instead of Uniform weights. 
+
+```{r}
+# filter based on cumulative MAC
+skat <- assoc.skat$results[assoc.skat$results$n.alt >= 5, ]
+
+# significant genes
+skat[skat$pval < 0.05/nrow(skat), ]
+
+# make a QQ plot of the SKAT test p-values
+qqPlot(skat$pval)
+```
+
+We have one significant SKAT association at ENSG00000253184 with $p = 1.1 \times 10^{-4}$. \n
+
+### SMMAT Test
+
+We can also perform a SMMAT test, which efficiently combines the $p$-values from the burden test and an asymptotically independent adjusted "SKAT-type" test (it's essentially a SKAT test conditional on the burden) using Fisher's method. This method is conceptually similar to the SKAT-O test but much faster computationally. 
+
+```{r assoc_smmat, message = FALSE}
+# reset the iterator to the first window
+resetIterator(iterator, verbose = FALSE)
+
+# run the SKAT test
+assoc.smmat <- assocTestAggregate(iterator, 
+                                  null.model = nullmod, 
+                                  test = "SMMAT", 
+                                  AF.max = 0.01, 
+                                  weight.beta = c(1,25))
+```
+
+```{r}
+# results for each aggregation unit
+head(assoc.smmat$results)
+```
+
+Again, each row of the `results` data.frame represents one tested aggregation unit. Some of the columns are the same as for the burden and SKAT tests; new columns include the SMMAT combined $p$-value (`pval_SMMAT`). Note that the burden score value (`Score_burden`) and its standard error (`Score.SE_burden`), and the burden score test statistic (`Stat_burden`) and $p$-value (`pval_burden`) are included -- these are the same values you would get from running the burden test. There are also columns for the SKAT-type test statistic (`Q_theta`), $p$-value (`pval_theta`), $p$-value method (`pval_theta.method`), and error indicator (`err`) -- these are *not* the same values you would get from running SKAT because the "theta" component of the test has been adjusted for the burden test. Again, there is no effect size provided, as there is no such concept for the overall SMMAT test. 
+
+```{r}
+# variant info per aggregation unit 
+head(assoc.smmat$variantInfo[[3]])
+```
+
+Again, the `variantInfo` for each aggregation unit includes the same information as the other tests. \n
+
+The function returns the $p$-values from the burden test (`pval_burden`), the adjusted SKAT-type test (`pval_theta`), and the combined $p$-value (`pval_SMMAT`). The combined $p$-value is the one to use for assessing significance. The burden and theta $p$-values may be of secondary interest for further exploring results. 
+
+```{r}
+# filter based on cumulative MAC
+smmat <- assoc.smmat$results[assoc.smmat$results$n.alt >= 5, ]
+
+# significant genes
+smmat[smmat$pval_SMMAT < 0.05/nrow(smmat), ]
+
+# make a QQ plot of the SKAT test p-values
+qqPlot(smmat$pval_SMMAT)
+```
+
+The SMMAT test found two significant genes, ENSG00000253184 and ENSG00000251354, which were the genes that the SKAT and burden tests found respectively. For ENSG00000253184, the SMMAT $p = 4.6 \times 10^{-4}$, while the SKAT $p = 1.1 \times 10^{-4}$ (see above) was slightly more significant. For ENSG00000251354, the SMMAT $p = 4.3 \times 10^{-6}$ was more significant than the burden $p = 1.0 \times 10^{-5}$ (the burden $p$-value is a bit different from earlier because we used the Wu weights instead of Uniform weights) -- as seen here, the combined SMMAT $p$-value may be more significant than either burden or SKAT separately. 
+
+
+## Exercise 6.1 (Application)
+
+Use the `GENESIS Aggregate Association Testing` app on the BioData Catalyst powered by Seven Bridges platform to perform gene-based burden tests for trait_1 using the null model previously fit in the `02_GWAS.Rmd` tutorial. Only include variants with alternate allele frequency < 1% and use the Wu weights to upweight rarer variants. Use the genotype data in the genome-wide GDS files you created previously. \n
+
+The `GENESIS Aggregate Association Testing` app currently requires Variant group files that are RData data.frames (i.e. our GRanges objects with gene defintions will not work). Fortunately, it is easy to transform our GRanges object to the required data.frame. The files you need to run the application are already in the project files on the SBG platform. 
+
+```{r}
+# look at the GRanges object
+genes
+
+# conver to the required data.frame
+genes.df <- data.frame("group_id" = names(genes),
+                       chr = seqnames(genes),
+                       start = start(genes),
+                       end = end(genes))
+head(genes.df)
+```
+
+The steps to perform this analysis are as follows:
+
+- Copy the app to your project if it is not already there:
+  - Click: Public Resources > Workflows and Tools > Browse
+  - Search for `GENESIS Aggregate Association Testing`
+  - Click: Copy > Select your project > Copy
+- Run the analysis in your project:
+  - Click: Apps > `GENESIS Aggregate Association Testing` > Run
+  - Specify the Inputs:
+    - GDS files: `1KG_phase3_GRCh38_subset_chr<CHR>.gds` (select all 22 chromosomes)
+    - Null model file: `1KG_trait_1_null_model.RData`
+    - Phenotype file: `1KG_trait_1_phenotypes.RData` (use the phenotype file created by the Null Model app)
+    - Variant group files: `gencode.v38.hg38_ENSG_VarGroups_subset_chr<CHR>.RData` (select all 22 chromosomes)
+  - Specify the App Settings:
+    - define_segments > Genome build: hg38
+    - aggregate_list > Aggregate type: position
+    - assoc_aggregate > Alt Freq Max: 0.01
+    - assoc_aggregate > Memory GB: 32 (increase to make sure enough available)
+    - assoc_aggregate > Test: burden
+    - assoc_aggregate > Weight Beta: "1 25"
+    - Output prefix: "1KG_trait_1_burden" (or any other string to name the output file)
+    - GENESIS Association results plotting > Plot MAC threshold: 5
+  - Click: Run
+  
+The analysis will take a few minutes to run. You can find your analysis in the Tasks menu of your Project to check on its progress and see the results once it has completed.
+
+The output of this analysis will be 22 `<output_prefix>_chr<CHR>.RData` files with the association test results for each chromosome as well as a `<output_prefix>_manh.png` file with the Manhattan plot and a `<output_prefix>_qq.png` file with the QQ plot. Review the Manhattan plot -- are there any significant gene associations?
+
+You can find the expected output of this analysis by looking at the existing task `11 Burden Association Test trait_1` in the Tasks menu of your Project. The output files are available in the Project, so you do not need to wait for your analysis to finish to look at the output.
+
+
+## Exercise 6.2 (Data Studio)
+
+After running an Application, you may want to load the results into RStudio to explore them interactively. All of the output files are saved in the directory `/sbgenomics/project-files/`. Load the chr 8 burden results into RStudio and find the significant genes.  
+```{r}
+# your solution here 
+#
+#
+#
+#
+#
+#
+#
+#
+#
+```
+
+### Solution 6.2 (Data Studio)
+
+After running an Application, you may want to load the results into RStudio to explore them interactively. All of the output files are saved in the directory `/sbgenomics/project-files/`. Load the chr 8 burden results into RStudio and find the significant genes.
+
+```{r, eval = FALSE}
+# load
+assoc <- get(load('/sbgenomics/project-files/1KG_trait_1_burden_chr8.RData'))
+names(assoc)
+
+head(assoc$results)
+
+# filter to cumulative MAC >= 5
+burden <- assoc$results[assoc$results$n.alt >= 5, ]
+
+# significant genes
+burden[burden$Score.pval < 0.05/nrow(burden), ]
+```
+
+Gene ENSG00000186510.7 has the smallest burden p-value ($p = 4.8x10^{-4}$).
+

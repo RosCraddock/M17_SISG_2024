@@ -1,0 +1,364 @@
+# 4. Conditional Analysis
+
+In this tutorial, we will learn how to investigate our association signals and perform conditional analyses to search for secondary signals. We will utilize the same association testing applications as well as the [LocusZoom Shiny App](https://locuszoom-shiny-app.bdc.sb-webapp.com/), which is an "Interactive Browser" built with [R Shiny](https://shiny.rstudio.com/) on the NHLBI BioData Catalyst powered by Seven Bridges cloud platform. 
+
+## Original Association Test Results
+
+In the `02_GWAS.Rmd` tutorial, we found two loci with significant associations on chromosome 1. Let's take a quick look at the association test results to remind ourselves what we found
+
+```{r}
+# load the association test results
+repo_path <- "https://github.com/UW-GAC/SISG_2024/raw/main"
+if (!dir.exists("data")) dir.create("data")
+
+assocfile <- "data/assoc_chr1_trait_1.RData"
+if (!file.exists(assocfile)) download.file(file.path(repo_path, assocfile), assocfile)
+assoc <- get(load(assocfile))
+```
+
+We make a Manhattan plot of the $-log_{10}(p)$-values using the `manhattanPlot` function from the `GWASTools` package to visualize the association signals.
+
+```{r, assoc_single_manhattan}
+GWASTools::manhattanPlot(assoc$Score.pval, 
+                         chromosome = assoc$chr, 
+                         thinThreshold = 1e-4,
+                         ylim = c(0, 12))
+```
+
+Filter to just the genome-wide significant variants
+
+```{r}
+# genome-wide significant
+assoc[assoc$Score.pval < 5e-8, ]
+
+# extract the variant.id of these hits for later
+hits <- assoc$variant.id[assoc$Score.pval < 5e-8]
+```
+
+We see that 6 variants at two different loci have $p < 5 \times 10^{-8}$. The most significant variant has $p = 5.8 \times 10^{-12}$ and is at position 212956321. Let's explore this variant further. 
+
+## Locus Zoom Plots
+
+The [Locus Zoom Shiny App](https://locuszoom-shiny-app.bdc.sb-webapp.com/) is an interactive tool built on the [LocusZoom.js library](https://statgen.github.io/locuszoom/) that enables users to make LocusZoom plots of association results produced with the `GENESIS Single Variant Association Testing` app. We will now use the LocusZoom Shiny App to make a LocusZoom plot of our association hit on chromosome 1.
+
+- Launch the interactive browser
+  - From the top menu, click "Public Resources" > "Interactive Web Apps"
+  - Click: "Open" on the LocusZoom Shiny App
+  - Click: "Yes" to proceed
+  
+The application requires data to be stored as a JSON file. There is a `GENESIS Data JSONizer` tool that converts single-variant association test results .RData file as output by the `GENESIS Single Variant Association Testing` app into the required JSON file. This tool also calculates the linkage disequilibrium (LD) measures required to make the LocusZoom plot for the selected variants.
+
+- Click the "GENESIS Data JSONizer" tab at the top of the screen
+- Select Input Files
+  - GDS file: `1KG_phase3_GRCh38_subset_chr1.gds`
+  - .RData file: `1KG_trait_1_chr1.RData`
+- JSONizer parameters
+  - Check: "Specify variant and a flanking region around it"
+  - Select the position of the variant of interest: 212956321
+  - Specify flanking region: 50000 (i.e. 50kb in each direction).
+  - Select test type: score
+- Click: JSONize
+  
+You have the option to download the JSON file to your local environment or upload it to the BioData Catalyst platform and save it for later, if you desire. 
+
+- Expand: JSON File - Download and Export Form
+- Set a file name (e.g. "1KG_trait_1_chr1_212956321")
+- Choose extension: `.json`
+- Click: Export JSON file to platform
+- Select your Project and Click: Confirm
+- Click: Upload
+
+There are several optional data layers you can add to your LocusZoom plot. The most likely layer that you will want to adjust is the Linkage Disequilibrium (LD) layer. The tool gives you the option to either compute LD measures using your sample genotype data stored in the GDS file (the default), or use the University of Michigan (UM) database. 
+
+- Expand: Option Data Layers
+- Expand: Linkage Disequilibrium
+- Select Data Source: Compute LD Data
+- Select reference variant: 1:212956321_?/? (our variant of interest)
+- Click: Calculate LD
+
+You can expand the Linkage Disequilibrium Data Overview tab to see a preview of the calculated LD data, and you can download the data as a JSON file to your local environment or upload it to the BioData Catalyst platform and save it for later, if you desire.
+
+- Expand: JSON File - Download and Export Form
+- Set a file name (e.g. "1KG_trait_1_chr1_212956321_LD")
+- Choose extension: `.json`
+- Click: Export JSON file to platform
+- Select your Project and Click: Confirm
+- Click: Upload
+
+You need to select the Genome Build that matches your data:
+
+- Change the Genome Build to GRCh38 for this dataset
+
+You can review the Initial Plot State Info to make sure everything looks as expected, and then make the plot!
+
+- Click: Generate plot
+
+The generated plot is interactive. You can hover over variants to see their chromosome, position, alleles, and association p-value. You can drag the figure left or right to see different sections of the plotted region. You can save the current figure as a .png or .svg file either locally or on the BioData Catalyst platform. 
+
+If you've saved your .json association results file and your .json LD statistics file to your Project, you can come back later and recreate your LocusZoom plot by selecting the "Use Your Own Data Sources" tab at the top of the LocusZoom Shiny App page. This time, rather than JSONizing the data, you can select the .json files as input, and set the plotting parameters the same as we did above.
+
+
+## Conditional Analysis
+
+One of the most common post-GWAS analyses we routinely perform is to run conditional analyses to explore if there are any secondary hits at loci (regions) with significant variant associations. Conditional analyses include genetic variants in the null model (i.e. the conditional variants) to adjust for their effects on the trait, just like the other fixed effect covariates in the model. The idea is to see if other association signals remain after accounting for (i.e. conditioning on) the effect(s) of the conditional variant(s).
+
+### Selecting Conditional Variants
+
+Conditional variants are usually selected either (1) as the top hits from your initial GWAS analysis, or (2) as variants known to be associated with the trait from prior publications. When performing conditional analyses using top hits from an initial GWAS analysis, the conditioning procedure is often performed step-wise iteratively to get a set of (roughly) independent association signals.  
+
+- add the top hit (i.e. variant with the smallest $p$-value) to the set of conditional variants 
+- perform the conditional association test, conditioning on the set of conditional variants
+- check if any significant variants remain
+  - if yes, repeat
+  - if no, stop
+
+When performing genome-wide conditional analyses, it is typically OK to add the top hit from each locus (i.e. region of the genome) to the set of conditional variants at each iteration. Note that the definition of locus here is not concise -- it is typically based on some measure of genetic distance, whether that be physical distance (e.g. withing 500kb, 1Mb, etc.) or genetic distance based on linkage disequilibrium (LD). If you want to err on the side of caution, you can add only the top hit from each chromosome to your set of conditional variants at each iteration. \n
+
+```{r}
+assoc[assoc$Score.pval < 5e-8, ]
+```
+
+In our original association analysis, we found that there were 6 genome-wide significant variants at two distinct loci. In the particular example here, it is pretty clear that we can consider our hits as two distinct loci, as they are at opposite ends of the chromosome and the physical distance between them is ~188Mb. Therefore, we identify our conditional variants as those at `1:212956321` and `1:25046749`. \n
+
+### Conditoinal Null Model
+
+When preparing our data to run the conditional null model, we need to actually extract the genotype values from the GDS file. It is easiest to use the `variant.id` values from the GDS file, but remember that these are unique to your GDS file. 
+
+```{r}
+library(SeqArray)
+library(SeqVarTools)
+
+# open the GDS file
+gdsfile <- "data/1KG_phase3_GRCh38_subset_chr1.gds"
+if (!file.exists(gdsfile)) download.file(file.path(repo_path, gdsfile), gdsfile)
+gdsfmt::showfile.gds(closeall=TRUE) # make sure file is not already open
+gds <- seqOpen(gdsfile)
+
+# variants to condition on
+cond <- c(2458, 31614)
+
+# set a filter to the conditional variants
+seqSetFilter(gds, variant.id = cond)
+
+# read in the genotype data
+geno <- altDosage(gds)
+head(geno)
+```
+
+First we load the `AnnotatedDataFrame` with the phenotype data that we prepared previously and merge in the genotypes for the conditional variants.
+
+```{r, message = FALSE}
+library(Biobase)
+
+# pheno data
+annotfile <- "data/pheno_annotated_pcs.RData"
+if (!file.exists(annotfile)) download.file(file.path(repo_path, annotfile), annotfile)
+annot <- get(load(annotfile))
+
+# merge
+dat <- merge(pData(annot), 
+             data.frame('sample.id' = rownames(geno), g = geno),
+             by = 'sample.id')
+head(dat)
+
+# updated AnnotatedDataFrame
+annot <- AnnotatedDataFrame(dat)
+annot
+```
+
+We also need to load our kinship matrix
+
+```{r}
+# load the full PC-Relate KM
+kmfile <- "data/pcrelate_Matrix.RData"
+if (!file.exists(kmfile)) download.file(file.path(repo_path, kmfile), kmfile)
+km <- get(load(kmfile))
+dim(km)
+km[1:5,1:5]
+```
+Now we can fit our null model, including the conditional variants as covariates. The rest of the model should remain the same as in the original association analysis.
+
+```{r}
+library(GENESIS)
+
+# fit the conditional model
+nullmod.cond <- fitNullModel(annot, 
+                             outcome = "trait_1", 
+                             covars=c("g.2458", "g.31614", "sex", "age", paste0("PC", c(1:7))), 
+                             cov.mat=km, 
+                             verbose=TRUE)
+```
+
+Look at the conditional null model output: 
+
+```{r}
+# description of the model we fit
+nullmod.cond$model
+
+# fixed effects
+nullmod.cond$fixef
+```
+Note that, as expected, the two conditional variants have very significant $p$-values in the null model. The $p$-values aren't *exactly* the same as what we calculated in the original association score tests, but they are quite close -- good validation that the score test procedure is working well!
+
+### Conditional Association Test
+
+Now that we have our conditional null model, we can perform the conditional association tests. The procedure is exactly the same as what we've seen before, just using this new null model. 
+
+```{r}
+# reset the filter to all variants
+seqResetFilter(gds)
+
+# make the seqVarData object
+seqData <- SeqVarData(gds, sampleData=annot)
+
+# make the iterator object
+iterator <- SeqVarBlockIterator(seqData, verbose=FALSE)
+
+# run the single-variant association test
+assoc.cond <- assocTestSingle(iterator, 
+                              null.model = nullmod.cond,
+                              test = "Score")
+dim(assoc.cond)
+
+# remove the conditional variants
+assoc.cond <- assoc.cond[!(assoc.cond$variant.id %in% cond),]
+dim(assoc.cond)
+```
+
+Note that we removed the variants we conditioned on from our association test results. The `assocTestSingle` function does not know you conditioned on those variants; it will return statistics, but they will be non-sense -- the test statistic will blow up to $\pm Inf$ and you will get $p$-values very near to 0 or 1. \n
+
+#### Examine the results
+
+Let's look at the conditional association results. We make a Manhattan plot of the $-log_{10}(p)$-values using the `manhattanPlot` function from the `GWASTools` package to visualize the association signals.
+
+```{r}
+GWASTools::manhattanPlot(assoc.cond$Score.pval, 
+                         chromosome = assoc.cond$chr, 
+                         thinThreshold = 1e-4,
+                         ylim = c(0, 12))
+```
+
+We see that after conditioning the signal from the locus at the beginning of the chromosome is completely removed, but there is still some signal from the locus at the end of the chromosome. Filter to just the genome-wide significant variants to see the statistics
+
+```{r}
+# genome-wide significant
+assoc.cond[assoc.cond$Score.pval < 5e-8, ]
+```
+
+There is now just one genome-wide significant variant, `1:212951423`. Prior to conditioning, this variant had $p = 6.2 \times 10^{-10}$, and after conditioning it has $p = 3.1 \times 10^{-9}$. The signal is reduced *very slightly*, but we would conclude that the association signal at this variant is independent of the association signals at the other variants we conditioned on. Given variant `1:212951423` proximity to variant `1:212956321` that we conditioned on -- only about 5kb apart -- this may seem surprising. This is an example of a secondary signal at this locus. \n
+
+We can print the conditional association statistics for all of the original hits to see that the signal at the rest of those variants has in fact gone away (recall that the two variants we conditioned on are removed from the output)
+
+```{r}
+assoc.cond[assoc.cond$variant.id %in% hits, ]
+```
+
+If we wanted to continue iterating, we would run a second conditional analysis, conditioning on both variants `1:212956321` and `1:212951423` to look for a tertiary signal at this locus. However, with only one genome-wide significant variant remaining, that is unnecessary in this situation.
+
+#### LD calculation
+
+To understand this secondary signal, we can use the `snpgdsLDpair` function from SNPRelate package to compute the LD between the top hits at this locus from our primary and secondary signals.
+
+```{r}
+library(SNPRelate)
+
+# filter the GDS to the two variants
+seqSetFilter(gds, variant.id = c(31614, 31443))
+
+# read in the genotype values
+geno <- altDosage(gds)
+
+# compute the LD r^2 value (note that the function returns the correlation, not squared)
+snpgdsLDpair(snp1 = geno[,1], snp2 = geno[,2])^2
+```
+
+The LD $r^2$ value between these two variants is quite small, nearly 0, which explains why the secondary signal at variant `1:212951423` remains after conditioning on variant `1:212956321`. 
+
+
+## Exercise 4.1 (Application)
+
+The `GENESIS Null Model` app on the BioData Catalyst powered by Seven Bridges platform makes it quite simple to perform a conditional analysis. In addition to the inputs provided for the standard analysis, we need to provide the GDS files that contain the genotype data for the variants we want to condition on and an .RData file that specifies the chromosome and variant.id values of the variants we want to condition on. \n 
+
+Use the `GENESIS Null Model` to fit a null model for trait_1, conditioning on the top hit from each locus on chromosome 1 in our original GWAS analysis. The rest of the model parameters should be the same as the original GWAS -- adjust for sex, age, ancestry, and kinship in the model. The steps to perform this analysis are as follows:
+
+- Copy the app to your project if it is not already there:
+  - Click: Public Resources > Workflows and Tools > Browse
+  - Search for `GENESIS Null Model`
+  - Click: Copy > Select your project > Copy
+- Run the analysis in your project:
+  - Click: Apps > `GENESIS Null Model` > Run
+  - Specify the Inputs:
+    - Phenotype file: `pheno_annotated.RData` 
+    - PCA file: `1KG_phase3_GRCh38_subset_pca.RData`
+    - Relatedness matrix file: `1KG_phase3_subset_GRCh38_pcrelate_Matrix.RData`
+    - GDS files: `1KG_phase3_GRCh38_subset_chr1.gds`
+    - Conditional variant file: `conditional_vars_trait_1_chr1.RData`
+  - Specify the App Settings:
+    - Covariates: age, sex (each as a different term)
+    - Family: gaussian
+    - Number of PCs to include as covariates: 7
+    - Outcome: trait_1
+    - Two stage model: FALSE
+    - Output prefix: "1KG_trait_1_cond" (or any other string to name the output file)
+  - Click: Run
+  
+The analysis will take a few minutes to run. You can find your analysis in the Tasks menu of your Project to check on its progress and see the results once it has completed.
+
+The output of this analysis will be a `<output_prefix>_null_model.RData` file that contains the null model fit, a `<output_prefix>_phenotypes.RData` file with the phenotype data used in the analysis, and a `<output_prefix>_report.Rmd` and `<output_prefix>_report.html` with model diagnostics. Review the .html report -- which covariates have significant ($p < 0.05$) associations with trait_1 in the null model? What do you notice about the boxplots of the trait_1 values by the conditional variants?
+
+You can find the expected output of this analysis by looking at the existing task `09 Conditional Null Model trait_1` in the Tasks menu of your Project. The output files are available in the Project, so you do not need to wait for your analysis to finish to move to the next exercise.
+
+### Solution 4.1 (Application)
+
+From looking at the .html report, we see that our conditional variants (var_2458 and var_31614), PC1, PC2, PC3, and PC6 have significant associations with trait_1 in our conditional null model. From the boxplots, we can see the positive trend between the trait_1 values and the number of copies of the effect allele at each conditional variant.
+
+
+## Exercise 4.2 (Application)
+
+Use the `GENESIS Single Variant Association Testing` app on the BioData Catalyst powered by Seven Bridges platform to perform a conditional association tests for trait_1 using the null model fit in the previous exercise. To speed things up, we will restrict this analysis to chromosome 1. Use the genotype data in the genome-wide GDS files you created previously. The steps to perform this analysis are as follows:
+
+- Copy the app to your project if it is not already there:
+  - Click: Public Resources > Workflows and Tools > Browse
+  - Search for `GENESIS Single Variant Association Testing`
+  - Click: Copy > Select your project > Copy
+- Run the analysis in your project:
+  - Click: Apps > `GENESIS Single Variant Association Testing` > Run
+  - Specify the Inputs:
+    - GDS Files: `1KG_phase3_GRCh38_subset_chr1.gds`
+    - Null model file: `1KG_trait_1_cond_null_model.RData`
+    - Phenotype file: `1KG_trait_1_cond_phenotypes.RData` (use the phenotype file created by the Null Model app)
+  - Specify the App Settings:
+    - MAC threshold: 5
+    - Test type: score
+    - memory GB: 32 (increase to make sure enough available)
+    - Output prefix: "1KG_trait_1_assoc_cond" (or any other string to name the output file)
+  - Click: Run
+  
+The analysis will take a few minutes to run. You can find your analysis in the Tasks menu of your Project to check on its progress and see the results once it has completed.
+
+The output of this analysis will be an `<output_prefix>_chr1.RData` file with the association test results for chromosome 1 as well as a `<output_prefix>_manh.png` file with the Manhattan plot and a `<output_prefix>_qq.png` file with the QQ plot. Review the truncated Manhattan plot -- what do you find?
+
+You can find the expected output of this analysis by looking at the existing task `10 Conditional Single Variant Association Test trait_1` in the Tasks menu of your Project. The output files are available in the Project, so you do not need to wait for your analysis to finish to move to the next exercise.
+
+### Solution 4.2 (Application)
+
+From looking at the truncated Manhattan plot, we see that the signal from the locus at the beginning of the chromosome has been removed, but there is still a genome-wide significant variant from the locus at the end of the chromosome. We also see that there is a truncated variant at the top of the figure for each locus -- these are the variants we conditioned on. The code in the application does not know what variants we conditioned on, so it does not know to remove them from the plots. 
+
+
+## Exercise 4.3 (LocusZoom Shiny App)
+
+Return to the LocusZoom Shiny App and make locus zoom plots indexed by our secondary hit at position 212951423, using both the original and conditional association analysis results. For the original analysis results, you can use the data you JSONized before. For the conditional analysis results, you will need to JSONize the association statistics from that analysis. What do you observe in these locus zoom plots? 
+
+
+
+## Exercise 4.4 (LocusZoom Shiny App)
+
+Notably, the LocusZoom plot we generated with the example data is fairly sparse, which is not representative of what a LocusZoom plot would actually look like in practice. There are example data sets available in the tool via the [University of Michigan database](https://portaldev.sph.umich.edu/docs/api/v1/#introduction). Select the "Explore UM Database" tab at the top of the LocusZoom Shiny App page and generate a LocusZoom plot using the GIANT Consortium BMI meta-analysis (PMID: 20935630) data for variant chr16:53803574, using a flanking region of 100kb. What is the p-value of the variant chr16:53803574_T/A? What gene is this variant located in? Change the LD reference population to EUR (European ancestry) -- what do you observe? Change the LD reference population to AFR (African ancestry) -- what do you observe? 
+
+### Solution 4.4 (Locus Zoom Shiny App)
+
+- The p-value of variant chr16:53803574_T/A is reported as $2.05 x 10^{-62}$
+- This variant is located in the FTO gene, which is well established to be associated with BMI.
+- Using the EUR LD reference panel, many of the variants in this region with similar p-values have very high LD with variant chr16:53803574_T/A (indicated by the red color).
+- Using the AFR LD reference panel, many of the variants in this region with similar p-values no longer have high LD with variant chr16:53803574_T/A (indicated by the blue color).
+

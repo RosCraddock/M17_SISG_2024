@@ -1,0 +1,365 @@
+# 2. Genome Wide Association Studies (GWAS)
+
+Single variant association tests are used to identify genetic variants associated with a phenotype of interest. Performing single-variant tests genome-wide is commonly referred to as a Genome Wide Association Study (GWAS). This tutorial demonstrates how to perform single variant association tests using mixed models with the [GENESIS](https://bioconductor.org/packages/release/bioc/html/GENESIS.html) R/Bioconductor package. 
+
+## Prepare the Data
+
+Before we can begin our association testing procedure, we must prepare our data in the required format. GENESIS requires that phenotype data be provided as an `AnnotatedDataFrame`, which is a special data structure provided by the  [Biobase](https://www.bioconductor.org/packages/release/bioc/html/Biobase.html) R/Bioconductor package that contains both data and metadata. You should include a description of each variable in the metadata. 
+
+
+### Phenotype Data
+
+First, we load our phenotype data (i.e. both the outcome and covariate data), which is provided in a tab separated .tsv file. We then create metadata to describe the columns of the phenotype data. Finally, we create an `AnnotatedDataFrame` by pairing the phenotype data with the metadata.
+
+```{r, message = FALSE}
+library(Biobase)
+```
+
+```{r, pheno_data}
+repo_path <- "https://github.com/UW-GAC/SISG_2024/raw/main"
+if (!dir.exists("data")) dir.create("data")
+
+# load phenotype data
+phenfile <- "data/pheno_data.tsv"
+if (!file.exists(phenfile)) download.file(file.path(repo_path, phenfile), phenfile)
+phen <- read.table(phenfile, header = TRUE, sep = "\t", as.is = TRUE)
+head(phen)
+
+# create metadata
+metadata <- data.frame(labelDescription = c("sample identifier",
+                                            "population",
+                                            "super population",
+                                            "sex",
+                                            "age at measurement",
+                                            "trait 1 values",
+                                            "trait 2 values",
+                                            "case-control status"),
+                       row.names = colnames(phen))
+metadata
+
+# create the AnnotatedDataFrame
+annot <- AnnotatedDataFrame(phen, metadata)
+annot
+```
+
+We use the `pData` and `varMetaData` functions to access the data and metadata in our `AnnotatedDataFrame`, respectively.
+
+```{r}
+# access the data with the pData() function.
+head(pData(annot))
+
+# access the metadata with the varMetadata() function.
+varMetadata(annot)
+```
+
+Save the `AnnotatedDataFrame` with PCs for future use.
+
+```{r}
+save(annot, file = "data/pheno_annotated.RData")
+```
+
+#### Sample Identifiers 
+
+Note that the GENESIS code to fit the mixed model and perform the association tests requires that the `AnnotatedDataFrame` have a column named `sample.id`, which represents a sample (i.e. sequencing instance) identifier. The values in the `sample.id` column must match the `sample.id` values in the GDS file(s) containing the sequencing data. 
+
+When designing a study, we generally advise using separate IDs for samples (sequencing instances) and subjects (individuals with phenotypes) and maintaining a sample to subject mapping file. This practice can be beneficial for quality control purposes; for example, when sample swaps are detected, the mapping between sequencing (indexed by `sample.id`) and phenotype (indexed by `subject.id`) data can easily be updated, rather than needing to modify and re-write phenotype data or sequencing metrics files.
+
+However, in this example, the 1000 Genomes sample identifiers (`sample.id`) are used as subject identifiers in our phenotype data -- this goes against our recommendation, but is OK for these exercises.
+
+### Genetic Ancestry Principal Components (PCs)
+
+We use genetic ancestry PCs to adjust for potential confounding due to population structure in our sample. The additional tutorial `02.A_population_structure_relatedness.Rmd` shows how to compute the ancestry PCs that are used below. In that tutorial, we find that PCs 1-7 appear to reflect population structure in our sample, so we will use those to adjust for ancestry in our null model. We need to add these PCs to our `AnnotatedDataFrame` with the phenotype data.
+
+```{r, load_pcs, message = FALSE}
+# load the ancestry PCs
+pcfile <- "data/pcs.RData"
+if (!file.exists(pcfile)) download.file(file.path(repo_path, pcfile), pcfile)
+pcs <- get(load(pcfile))
+pcs <- pcs[,c("sample.id", paste0("PC", 1:7))]
+head(pcs)
+
+# merge PCs with the sample annotation
+dat <- merge(pData(annot), pcs, by = "sample.id")
+head(dat)
+
+# update the variable metadata
+metadata <- data.frame(labelDescription = c(varMetadata(annot)$labelDescription, paste0("ancestry PC", 1:7)),
+                       row.names = colnames(dat))
+
+# create an updated AnnotatedDataFrame
+annot <- AnnotatedDataFrame(dat, metadata)
+annot
+```
+
+Save the `AnnotatedDataFrame` with PCs for future use.
+
+```{r}
+save(annot, file = "data/pheno_annotated_pcs.RData")
+```
+
+
+### Kinship Matrix (KM)
+
+In order to perform association testing using a mixed model, we also need a kinship matrix (KM) or genetic relationship matrix (GRM) that captures the genetic correlation among samples. The additional tutorial `02.A_population_structure_relatedness.Rmd` also shows how to compute pairwise kinship estimates using the PC-Relate method. We can create an (n x n) empirical kinship matrix (KM) from the output of `pcrelate` using the `pcrelateToMatrix` function. We set `scaleKin = 2` to multiply the kinship values by 2, which gives values on the same scale as the standard GRM (this is relevant for the interpretation of the variance component estimates). This matrix is represented in R as a symmetric matrix object from the Matrix package.
+
+```{r, load_kinship}
+library(GENESIS)
+
+# load the pcrelate results
+kinfile <- "data/pcrelate.RData"
+if (!file.exists(kinfile)) download.file(file.path(repo_path, kinfile), kinfile)
+pcrel <- get(load(kinfile))
+
+# create the empirical KM
+kinship <- pcrelateToMatrix(pcrel, scaleKin=2, verbose=FALSE)
+dim(kinship)
+kinship[1:5,1:5]
+```
+
+Save the kinship matrix for future use.
+
+```{r}
+# save the empirical KM
+save(kinship, file="data/pcrelate_Matrix.RData")
+```
+
+
+## Null Model
+
+Now that our data is prepared, we can move on to the association testing procedure. The first step is to fit the "null model" -- i.e., a model fit under the null hypothesis of no individual variant association. Operationally, this is fitting a mixed model with the desired outcome phenotype, fixed effect covariates, and a random effect with covariance proportional to a kinship matrix (KM).
+
+### Fit the Null Model
+
+We use the `fitNullModel` function from GENESIS. We need to specify the `AnnotatedDataFrame` with the phenotype data, the outcome variable (trait_1), and the fixed effect covariates (sex, age, and PCs 1-7). We also include the kinship matrix in the model with the `cov.mat` (covariance matrix) argument, which is used to specify the random effect(s) in the model with covariance structure(s) proportional to the supplied matrix(s).
+
+```{r null_model_fit}
+# fit the null model 
+nullmod <- fitNullModel(annot, 
+                        outcome="trait_1", 
+                        covars=c("sex", "age", paste0("PC", c(1:7))), 
+                        cov.mat=kinship, 
+                        verbose=FALSE)
+
+# save the output
+save(nullmod, file="data/null_model_trait1.RData")
+```
+
+The `fitNullModel` function returns a lot of information about the model that was fit. We examine some of that information below; to see all of the components, try `names(nullmod)`.
+
+```{r assoc_null_model_results}
+# description of the model we fit
+nullmod$model
+
+# fixed effect regression estimates
+nullmod$fixef
+
+# variance component estimates
+nullmod$varComp
+
+# model fit: fitted values, residuals
+head(nullmod$fit)
+
+# plot the residuals vs the fitted values
+library(ggplot2)
+ggplot(nullmod$fit, aes(x = fitted.values, y = resid.marginal)) +
+    geom_point(alpha = 0.5) +
+    geom_hline(yintercept = 0) +
+    geom_smooth(method = 'lm')
+```
+
+The residuals vs. fitted values diagnostic plot looks good.
+
+## Single-Variant Association Tests
+
+After fitting the null model, we use single-variant score tests to test each variant across the genome separately for association with the outcome, accounting for genetic ancestry and genetic relatedness among the samples. We use the `assocTestSingle` function from GENESIS. 
+
+### Prepare the GDS Iterator 
+
+First, we have to create a `SeqVarData` object linking the GDS file containing the sequencing data and the `AnnotatedDataFrame` containing the phenotype data. We then create a `SeqVarBlockIterator` object, which breaks the set of all variants in the `SeqVarData` object into blocks, allowing us to analyze genome-wide in manageable pieces. Note that in this tutorial we are analyzing only a small subset of variants from chromosome 1.
+
+```{r, message = FALSE}
+library(SeqVarTools)
+
+# open a connection to the GDS file
+gdsfile <- "data/1KG_phase3_GRCh38_subset_chr1.gds"
+if (!file.exists(gdsfile)) download.file(file.path(repo_path, gdsfile), gdsfile)
+gdsfmt::showfile.gds(closeall=TRUE) # make sure file is not already open
+gds <- seqOpen(gdsfile)
+
+# make the seqVarData object
+seqData <- SeqVarData(gds, sampleData=annot)
+
+# make the iterator object
+iterator <- SeqVarBlockIterator(seqData, verbose=FALSE)
+iterator
+```
+
+The `SeqVarBlockIterator` object looks a lot like the GDS objects we've seen before, but with an additional `sample.annotation` field that contains the phenotype data from the linked `AnnotatedDataFrame`.
+
+### Run the Association Tests
+
+The `assocTestSingle` function takes the already fitted null model as input, performs score tests by iterating over all blocks of variants in the `SeqVarBlockIterator` object, and then concatenates and returns the results.
+
+```{r assoc_single, message = FALSE}
+# run the single-variant association test
+assoc <- assocTestSingle(iterator, 
+                         null.model = nullmod,
+                         test = "Score")
+dim(assoc)
+head(assoc)
+```
+
+Each row of the results data.frame represents one tested variant and includes: variant information (`variant.id`, `chr`, and `pos`), the number of samples tested (`n.obs`), the minor allele count (`MAC`), the effect allele frequency (`freq`), the score value (`Score`) and its standard error (`Score.SE`), the score test statistic (`Score.Stat`) and $p$-value (`Score.pval`), an approximation of the effect allele effect size (`Est`) and its standard error (`Est.SE`), and an approximation of the proportion of variation explained by the variant (`PVE`). When using a `SeqVarData` object, the effect allele is the alternate allele. 
+
+```{r}
+# save for later
+save(assoc, file = 'data/assoc_chr1_trait_1.RData')
+```
+
+#### Examine the results
+
+A lot of the variants we tested are very rare -- i.e., the alternate allele is not observed for many samples. Single-variant tests do not perform well for very rare variants (we discuss testing rare variants in more detail later). We can use the minor allele count (MAC) observed in the sample to filter out rare variants that we may expect to have unreliable test results (e.g. MAC < 20). The MAC filter you will want to use in practice will depend on your sample size.
+
+```{r, mac}
+summary(assoc$MAC)
+sum(assoc$MAC < 20)
+
+# filter out the rarest variants
+assoc <- assoc[assoc$MAC >= 20, ]
+dim(assoc)
+```
+
+We make a QQ plot to examine the distribution of $p$-values.
+
+```{r, assoc_single_qq}
+qqPlot <- function(pval) {
+    pval <- pval[!is.na(pval)]
+    n <- length(pval)
+    x <- 1:n
+    dat <- data.frame(obs=sort(pval),
+                      exp=x/n,
+                      upper=qbeta(0.025, x, rev(x)),
+                      lower=qbeta(0.975, x, rev(x)))
+
+    ggplot(dat, aes(-log10(exp), -log10(obs))) +
+        geom_line(aes(-log10(exp), -log10(upper)), color="gray") +
+        geom_line(aes(-log10(exp), -log10(lower)), color="gray") +
+        geom_point() +
+        geom_abline(intercept=0, slope=1, color="red") +
+        xlab(expression(paste(-log[10], "(expected P)"))) +
+        ylab(expression(paste(-log[10], "(observed P)"))) +
+        theme_bw()
+}
+
+qqPlot(assoc$Score.pval)
+```
+
+We make a Manhattan plot of the $-log_{10}(p)$-values using the `manhattanPlot` fuction from the `GWASTools` package to visualize the association signals.
+
+```{r, assoc_single_manhattan}
+GWASTools::manhattanPlot(assoc$Score.pval, 
+                         chromosome = assoc$chr, 
+                         thinThreshold = 1e-4,
+                         ylim = c(0, 12))
+```
+
+We should expect the majority of variants to fall near the red `y=x` line in the QQ plot. Deviation above the line, commonly referred to as "inflation" is typically indicative of some model issue (e.g. unaccounted for population structure or relatedness). In this example, the appearance of inflation is caused by enrichment of association signal due to the fact that we have two genome-wide significant signals (i.e. $p < 5 \times 10^{-8}$) and our dataset only has a small number of variants on chromosome 1. 
+
+From looking at the results for the variants that reached genome-wide significance, we see that 6 variants at two different loci have $p < 5 \times 10^{-8}$
+```{r}
+assoc[assoc$Score.pval < 5e-8, ]
+```
+
+
+## Exercise 2.1 (Application)
+
+Use the `GENESIS Null Model` app on the BioData Catalyst powered by Seven Bridges platform to fit the a null model for trait_1, adjusting for sex, age, ancestry, and kinship in the model, using the example 1000 Genomes data. You can use the PCs and kinship matrix computed using the PC-AiR and PC-Relate apps in the additional Population Structure and Relatedness tutorial's exercises as inputs to this analysis. The steps to perform this analysis are as follows:
+
+- Copy the app to your project if it is not already there:
+  - Click: Public Resources > Workflows and Tools > Browse
+  - Search for `GENESIS Null Model`
+  - Click: Copy > Select your project > Copy
+- Run the analysis in your project:
+  - Click: Apps > `GENESIS Null Model` > Run
+  - Specify the Inputs:
+    - Phenotype file: `pheno_annotated.RData` 
+    - PCA file: `1KG_phase3_GRCh38_subset_pca.RData`
+    - Relatedness matrix file: `1KG_phase3_subset_GRCh38_pcrelate_Matrix.RData`
+  - Specify the App Settings:
+    - Covariates: age, sex (each as a different term)
+    - Family: gaussian
+    - Number of PCs to include as covariates: 7
+    - Outcome: trait_1
+    - Two stage model: FALSE
+    - Output prefix: "1KG_trait_1" (or any other string to name the output file)
+  - Click: Run
+  
+The analysis will take a few minutes to run. You can find your analysis in the Tasks menu of your Project to check on its progress and see the results once it has completed.
+
+The output of this analysis will be a `<output_prefix>_null_model.RData` file that contains the null model fit, a `<output_prefix>_phenotypes.RData` file with the phenotype data used in the analysis, and a `<output_prefix>_report.Rmd` and `<output_prefix>_report.html` with model diagnostics. Review the .html report -- which covariates have significant ($p < 0.05$) associations with trait_1 in the null model?
+
+You can find the expected output of this analysis by looking at the existing task `06 Null Model trait_1` in the Tasks menu of your Project. The output files are available in the Project, so you do not need to wait for your analysis to finish to move to the next exercise.
+
+### Solution 2.1 (Application)
+
+From looking at the .html report, we see that PC1, PC2, PC3, and PC6 have significant associations with trait_1 in our null model.
+
+
+## Exercise 2.2 (Application)
+
+Use the `GENESIS Single Variant Association Testing` app on the BioData Catalyst powered by Seven Bridges platform to perform a GWAS for trait_1 using the null model fit in the previous exercise. Use the genotype data in the genome-wide GDS files you created previously. The steps to perform this analysis are as follows:
+
+- Copy the app to your project if it is not already there:
+  - Click: Public Resources > Workflows and Tools > Browse
+  - Search for `GENESIS Single Variant Association Testing`
+  - Click: Copy > Select your project > Copy
+- Run the analysis in your project:
+  - Click: Apps > `GENESIS Single Variant Association Testing` > Run
+  - Specify the Inputs:
+    - GDS Files: `1KG_phase3_GRCh38_subset_chr<CHR>.gds` (select all 22 chromosomes)
+    - Null model file: `1KG_trait_1_null_model.RData`
+    - Phenotype file: `1KG_trait_1_phenotypes.RData` (use the phenotype file created by the Null Model app)
+  - Specify the App Settings:
+    - MAC threshold: 5
+    - Test type: score
+    - memory GB: 32 (increase to make sure enough available)
+    - Output prefix: "1KG_trait_1_assoc" (or any other string to name the output file)
+  - Click: Run
+  
+The analysis will take a few minutes to run. You can find your analysis in the Tasks menu of your Project to check on its progress and see the results once it has completed.
+
+The output of this analysis will be 22 `<output_prefix>_chr<CHR>.RData` files with the association test results for each chromosome as well as a `<output_prefix>_manh.png` file with the Manhattan plot and a `<output_prefix>_qq.png` file with the QQ plot. Review the QQ and Manhattan plots -- is there evidence of genomic inflation?
+
+You can find the expected output of this analysis by looking at the existing task `07 Single Variant Association Test trait_1` in the Tasks menu of your Project. The output files are available in the Project, so you do not need to wait for your analysis to finish to move to the next exercise.
+
+### Solution 2.2 (Application)
+
+From looking at the QQ plot, we see that the genomic control lambda = 1.074 and there is some deviation from the $y=x$ line -- both indicative of moderate inflation in our analysis. This is likely an artifact of looking at rare variants with a small sample size. 
+
+
+## Exercise 2.3 (Application)
+
+Use the `GENESIS Association results plotting` app on the BioData Catalyst powered by Seven Bridges platform to make additional QQ plots of the single variant association results binned by MAF: $0-0.5\%$, $0.5-1\%$, $1-5\%$, $\geq 5\%$. The steps to perform this analysis are as follows:
+
+- Copy the app to your project if it is not already there:
+  - Click: Public Resources > Workflows and Tools > Browse
+  - Search for `GENESIS Association results plotting`
+  - Click: Copy > Select your project > Copy
+- Run the analysis in your project:
+  - Click: Apps > `GENESIS Association results plotting` > Run
+  - Specify the Inputs:
+    - Results from association testing: `1KG_trait_1_assoc_chr<CHR>.RData` (select all 22 chromosomes)
+  - Specify the App Settings:
+    - Association Type: single
+    - QQ MAF bins: "0.005 0.01 0.05"
+  - Click: Run
+
+The analysis will take a few minutes to run. You can find your analysis in the Tasks menu of your Project to check on its progress and see the results once it has completed.
+
+The output of this analysis will be a `<output_prefix>_qq_bymaf.png` file. Look at the QQ plots by MAF bin -- how do they compare to the overall QQ plot of all variants?
+
+You can find the expected output of this analysis by looking at the existing task `08 Single Variant Association Plots trait_1` in the Tasks menu of your Project, so you do not need to wait for your analysis to finish to look at the output.
+
+### Solution 2.3 (Application)
+
+From the binned QQ plots, we see that the common variants (i.e. MAF $\geq 5\%$) have a genomic control lambda = 1.007 and follow along the $y=x$ line. As suspected, the inflation is only present in the rarer variants, likely due to the small sample size. 
