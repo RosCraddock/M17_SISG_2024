@@ -49,17 +49,17 @@ NOTE: All times are Eastern Daylight Time (GMT-04:00)
 | --- | --- | --- | --- |
 | 8:30am-10:00am | GWAS: Advanced Model Extenstions | [Slides] | [Slides] [.html] |
 | 10:00am-10:30am | _Coffee Break_ | | |
-| 10:30am-12:00pm | Leveraging Multi-Ancestry Data: Part 1 | [Slides] [.html] |
+| 10:30am-12:00pm | Leveraging Multi-Ancestry Data Lecture | [Slides] [.html] |
 | 12:00pm-1:30pm | _Lunch Break_ | | |
-| 1:30pm-3:00pm | Leveraging Multi-Ancestry Data: Part 2 | [Slides] [.html] |
+| 1:30pm-3:00pm | Leveraging Multi-Ancestry Data Exercises | [Slides] [.html] |
 | 3:00pm-3:30pm | _Coffee Break_ | | |
-| 3:30pm-5:00pm | Variant Annotation: Part 1 | [Slides] | [.Rmd] [.html] |
+| 3:30pm-5:00pm | Variant Annotation: Part 1 and Annotation Explorer | [Slides] | [.Rmd] [.html] |
 
 **Friday, June 14th**
 
 | Time | Topic | Lecture | Exercises/Discussion |
 | --- | --- | --- | --- |
-| 8:30am-10:00am | Variant Annotation: Part 2 | [Slides] | |
+| 8:30am-10:00am | Variant Annotation: Part 2 (UCSC Genome Browser and FAVOR) | [Slides] | |
 | 10:00am-10:30am | _Coffee Break_ | | |
 | 10:30am-12:00pm | Multi-Variant Association Tests | [Slides] [.html] |
 | 12:00pm-1:30pm | _Lunch Break_ | | |
