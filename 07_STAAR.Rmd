@@ -106,7 +106,7 @@ Note: we will utilize the default allele frequency setting (max MAF $1\%$), and 
 
 The analysis will take ~10 minutes to run. You can find your analysis in the Tasks menu of your Project to check on its progress and see the results once it has completed. 
 
-The output from this task is `<output_prefix>.Rdata`, which contains the STAAR association results.
+The output from this task is `<output_prefix>_chr<CHR>.Rdata`, which contains the STAAR association results.
 
 You can find the expected output of this analysis by looking at the existing task `14 STAARexercise Sliding Window 5kb Chr19` in the Tasks menu of your Project. The output files are available in the Project, so you do not need to wait for your analysis to finish to look at the output.
 
@@ -118,10 +118,10 @@ The output file for these association tests using STAAR is an `.RData` file. To 
   - Click: Apps > `STAARpipelineSummary VarSet` > Run
   - Specify the Inputs:
     - Annotation name catalog: `Annotation_name_catalog.csv`
-    - Input array results: `STAAR_region_sliding_5kb_chr19.Rdata`
+    - Input array results: `STAAR_region_sliding_5kb_chr19_chr19.Rdata`
   - Specify App Settings: 
     - Output file prefix: "STAAR_region_sliding_5kb_chr19" (or any other string to name the output file)
-    - Prefix of input results: "STAAR_region_sliding_5kb_chr19"
+    - Prefix of input results: "STAAR_region_sliding_5kb_chr19_chr"
     - Test type: Sliding_Window
   - Click: Run
 
