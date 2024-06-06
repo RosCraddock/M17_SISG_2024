@@ -20,14 +20,14 @@ After attending this module, participants will be able to:
 ### Lectures
 Course material will be presented through lectures. Slides for lectures are linked in the schedule below.
 
-### Exercises
-Many of the lectures will be followed with hands-on exercises. Students are encouraged to work through the exercises together. Afterwards, the instructors will walk through the exercises and lead a discussion.
+### Tutorials
+Many of the lectures will be followed with hands-on tutorials/exercises. Students are encouraged to work through the tutorials together. Afterwards, the instructors will walk through the tutorials and lead a discussion.
 
-To run the exercises, log into [NHLBI BioData Catalyst powered by Seven Bridges](https://platform.sb.biodatacatalyst.nhlbi.nih.gov) with your username and password -- we will use this platform for live demonstrations during the course.
+To run the tutorials, log into [NHLBI BioData Catalyst powered by Seven Bridges](https://platform.sb.biodatacatalyst.nhlbi.nih.gov) with your username and password -- we will use this platform for live demonstrations during the course.
 
 - You will retain access to the Seven Bridges platform, including your SISG Project with all of the course materials even after the course ends. The SISG24 Workshop billing group will remain available to you for a short period of time, after which you will need to set up another payment method to run analyses. You can [request pilot cloud credits](https://biodatacatalyst.nhlbi.nih.gov/resources/cloud-credits) ($500 worth) from BioData Catalyst. Additionally, there is guidance available for [writing BioData Catalyst cloud costs into your grant proposal budget](https://bdcatalyst.gitbook.io/biodata-catalyst-documentation/written-documentation/getting-started/writing-biodata-catalyst-into-a-grant-proposal). 
 
-All of the R code and data can also be downloaded from the [github repository](https://github.com/UW-GAC/SISG_2024) from which the site is built and run on your local machine. Download the complete workshop data and exercises: [https://github.com/UW-GAC/SISG_2024/archive/main.zip](https://github.com/UW-GAC/SISG_2024/archive/main.zip)
+All of the R code and data can also be downloaded from the [github repository](https://github.com/UW-GAC/SISG_2024) from which the site is built and run on your local machine. Download the complete workshop data and tutorials: [https://github.com/UW-GAC/SISG_2024/archive/main.zip](https://github.com/UW-GAC/SISG_2024/archive/main.zip)
 
 
 ## Schedule
@@ -36,36 +36,39 @@ NOTE: All times are Eastern Daylight Time (GMT-04:00)
 
 **Wednesday, June 12th**
 
-| Time | Topic | Lecture | Exercises/Discussion |
+| Time | Topic | Lecture | Tutorials/Exercises |
 | --- | --- | --- | --- |
 | 1:30pm-1:35pm | Introduction | Slides | |
-| 1:35pm-3:00pm | Intro to Cloud Computing for WGS Data Analysis | [Slides](https://docs.google.com/presentation/d/1SVbxImtUE0VsEHzl8mpj2oXBdT_Alw8twkj1CX8efLY/preview?slide=id.p) | [.Rmd](https://github.com/UW-GAC/SISG_2024/blob/main/01_gds_intro.Rmd) [.html](https://github.com/UW-GAC/SISG_2024/blob/main/01_gds_intro.html) |
+| 1:35pm-3:00pm | Intro to Cloud Computing for WGS Data Analysis <br> Intro to GDS Tutorial | [Slides](https://docs.google.com/presentation/d/1SVbxImtUE0VsEHzl8mpj2oXBdT_Alw8twkj1CX8efLY/preview?slide=id.p) | [.Rmd](https://github.com/UW-GAC/SISG_2024/blob/main/01_gds_intro.Rmd) [.html](https://htmlpreview.github.io/?https://github.com/UW-GAC/SISG_2024/blob/main/01_gds_intro.html) |
 | 3:00pm-3:30pm | _Coffee Break_ | | |
-| 3:30pm-5:00pm | GWAS | [Slides](https://drive.google.com/file/d/1QvaRc5n1TI85qPAHTj3SuKRWYo1Flmaf/view?usp=drive_link) | [.Rmd](https://github.com/UW-GAC/SISG_2024/blob/main/02_GWAS.Rmd) [.html](https://github.com/UW-GAC/SISG_2024/blob/main/02_GWAS.html) |
+| 3:30pm-5:00pm | GWAS | [Slides](https://drive.google.com/file/d/1QvaRc5n1TI85qPAHTj3SuKRWYo1Flmaf/view?usp=drive_link) | [.Rmd](https://github.com/UW-GAC/SISG_2024/blob/main/02_GWAS.Rmd) [.html](https://htmlpreview.github.io/?https://github.com/UW-GAC/SISG_2024/blob/main/02_GWAS.html) |
+| Extra | Population Structure and Relatedness Tutorial | | [.Rmd](https://github.com/UW-GAC/SISG_2024/blob/main/02.A_pop_structure_relatedness.Rmd) [.html](https://htmlpreview.github.io/?https://github.com/UW-GAC/SISG_2024/blob/main/02.A_pop_structure_relatedness.html)
 
 **Thursday, June 13th**
 
-| Time | Topic | Lecture | Exercises/Discussion |
+| Time | Topic | Lecture | Tutorials/Exercises |
 | --- | --- | --- | --- |
-| 8:30am-10:00am | GWAS: Advanced Model Extenstions | [Slides] | [Slides] [.html] |
+| 8:30am-10:00am | GWAS: Advanced Model Extenstions | [Slides](https://drive.google.com/file/d/1Fam4_KTQYRl20vANVkIbHm8TxgTLke5h/view?usp=drive_link) | [.Rmd](https://github.com/UW-GAC/SISG_2024/blob/main/03_advanced_GWAS.Rmd) [.html](https://htmlpreview.github.io/?https://github.com/UW-GAC/SISG_2024/blob/main/03_advanced_GWAS.html) |
+| Extra | GENESIS Model Explorer Tutorial | | [.Rmd](https://github.com/UW-GAC/SISG_2024/blob/main/03.A_GENESIS_model_explorer.Rmd) [.html](https://htmlpreview.github.io/?https://github.com/UW-GAC/SISG_2024/blob/main/03.A_GENESIS_model_explorer.html)
 | 10:00am-10:30am | _Coffee Break_ | | |
-| 10:30am-12:00pm | Leveraging Multi-Ancestry Data Lecture | [Slides] [.html] |
+| 10:30am-12:00pm | Leveraging Multi-Ancestry Data: Lecture | [Slides](https://docs.google.com/presentation/d/1tXdJ1ti1kOBgQhD1M_LTB7WOQZ2r9HmJ/preview?slide=id.p1) |
 | 12:00pm-1:30pm | _Lunch Break_ | | |
-| 1:30pm-3:00pm | Leveraging Multi-Ancestry Data Exercises | [Slides] [.html] |
+| 1:30pm-3:00pm | Leveraging Multi-Ancestry Data: <br> Locus Zoom and Conditional Analysis Tutorials | | [.Rmd](https://github.com/UW-GAC/SISG_2024/blob/main/04_conditional_analysis.Rmd) [.html](https://htmlpreview.github.io/?https://github.com/UW-GAC/SISG_2024/blob/main/04_conditional_analysis.html)
 | 3:00pm-3:30pm | _Coffee Break_ | | |
-| 3:30pm-5:00pm | Variant Annotation: Part 1 and Annotation Explorer | [Slides] | [.Rmd] [.html] |
+| 3:30pm-5:00pm | Variant Annotation: Part 1 <br> Annotation Explorer Tutorial | [Slides](https://docs.google.com/presentation/d/1W4A_XSPKwYSIJnzO9YmFh478CD4bT7Wv/preview?slide=id.p1) | [.Rmd](https://github.com/UW-GAC/SISG_2024/blob/main/05_annotation_explorer.Rmd) [.html](https://htmlpreview.github.io/?https://github.com/UW-GAC/SISG_2024/blob/main/05_annotation_explorer.html) |
+| 5:00pm-6:00pm | Tutorial Session | | |
 
 **Friday, June 14th**
 
-| Time | Topic | Lecture | Exercises/Discussion |
+| Time | Topic | Lecture | Tutorials/Exercises |
 | --- | --- | --- | --- |
-| 8:30am-10:00am | Variant Annotation: Part 2 (UCSC Genome Browser and FAVOR) | [Slides] | |
+| 8:30am-10:00am | Variant Annotation: Part 2 <br> UCSC Genome Browser and FAVOR Tutorial | [Slides](https://docs.google.com/presentation/d/1W4A_XSPKwYSIJnzO9YmFh478CD4bT7Wv/preview?slide=id.p29) | |
 | 10:00am-10:30am | _Coffee Break_ | | |
-| 10:30am-12:00pm | Multi-Variant Association Tests | [Slides] [.html] |
+| 10:30am-12:00pm | Multi-Variant Association Tests | [Slides](https://drive.google.com/file/d/1Gp2G-Lb7z44okN8twGpltBZR_zlQDUa7/view?usp=drive_link) | [.Rmd](https://github.com/UW-GAC/SISG_2024/blob/main/06_aggregate_tests.Rmd) [.html](https://htmlpreview.github.io/?https://github.com/UW-GAC/SISG_2024/blob/main/06_aggregate_tests.html)
 | 12:00pm-1:30pm | _Lunch Break_ | | |
-| 1:30pm-3:00pm | STAAR | Slides | [.Rmd] [.html] |
+| 1:30pm-3:00pm | STAAR | [Slides](https://docs.google.com/presentation/d/1svNLntJqOfqrwHhY3Gr39aON53pgz_0T/preview?slide=id.p1) | [.Rmd](https://github.com/UW-GAC/SISG_2024/blob/main/07_STAAR.Rmd) [.html](https://htmlpreview.github.io/?https://github.com/UW-GAC/SISG_2024/blob/main/07_STAAR.html) |
 | 3:00pm-3:30pm | _Coffee Break_ | | |
-| 3:30pm-5:00pm | Recent Findings and Resources for WGS Analysis | [Slides] [.html] |
+| 3:30pm-5:00pm | Recent Findings and Resources for WGS Analysis | [Slides](https://docs.google.com/presentation/d/1D9W_sCeM6ydkEZcJH00GsJ0QPaCjB2A-/preview?slide=id.p1) |
 
 ## R packages used
 
@@ -74,6 +77,7 @@ NOTE: All times are Eastern Daylight Time (GMT-04:00)
 - [SeqVarTools](http://bioconductor.org/packages/release/bioc/html/SeqVarTools.html)
 - [SNPRelate](http://bioconductor.org/packages/release/bioc/html/SNPRelate.html)
 - [Biobase](https://bioconductor.org/packages/release/bioc/html/Biobase.html)
+- [GenomicRanges](https://bioconductor.org/packages/release/bioc/html/GenomicRanges.html)
 - [GGally](https://cran.r-project.org/web/packages/GGally)
 
 
