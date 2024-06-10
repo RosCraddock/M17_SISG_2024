@@ -431,16 +431,16 @@ required JSON file. This tool also calculates the linkage disequilibrium
 variants.</p>
 <ul>
 <li>Click the “GENESIS Data JSONizer” tab at the top of the screen</li>
-<li>Select Input Files
+<li>Select Input Files from your Project
 <ul>
 <li>GDS file: <code>1KG_phase3_GRCh38_subset_chr1.gds</code></li>
-<li>.RData file: <code>1KG_trait_1_chr1.RData</code></li>
+<li>.RData file: <code>1KG_trait_1_assoc_chr1.RData</code></li>
 </ul></li>
 <li>JSONizer parameters
 <ul>
 <li>Check: “Specify variant and a flanking region around it”</li>
 <li>Select the position of the variant of interest: 212956321</li>
-<li>Specify flanking region: 50000 (i.e. 50kb in each direction).</li>
+<li>Specify flanking region: 100000 (i.e. 100kb in each direction).</li>
 <li>Select test type: score</li>
 </ul></li>
 <li>Click: JSONize</li>
@@ -450,7 +450,7 @@ environment or upload it to the BioData Catalyst platform and save it
 for later, if you desire.</p>
 <ul>
 <li>Expand: JSON File - Download and Export Form</li>
-<li>Set a file name (e.g. “1KG_trait_1_chr1_212956321”)</li>
+<li>Set a file name (e.g. “1KG_trait_1_assoc_chr1_212956321_100kb”)</li>
 <li>Choose extension: <code>.json</code></li>
 <li>Click: Export JSON file to platform</li>
 <li>Select your Project and Click: Confirm</li>
@@ -465,9 +465,12 @@ file (the default), or use the University of Michigan (UM) database.</p>
 <li>Expand: Option Data Layers</li>
 <li>Expand: Linkage Disequilibrium</li>
 <li>Select Data Source: Compute LD Data</li>
-<li>Select reference variant: 1:212956321_?/? (our variant of
+<li>Select reference variant: 1:212956321_T/C (our variant of
 interest)</li>
 <li>Click: Calculate LD</li>
+<li>Note: do not check the “use sample set file for LD calculation”
+button – this allows you to select a subset of samples from your
+dataset</li>
 </ul>
 <p>You can expand the Linkage Disequilibrium Data Overview tab to see a
 preview of the calculated LD data, and you can download the data as a
@@ -475,16 +478,16 @@ JSON file to your local environment or upload it to the BioData Catalyst
 platform and save it for later, if you desire.</p>
 <ul>
 <li>Expand: JSON File - Download and Export Form</li>
-<li>Set a file name (e.g. “1KG_trait_1_chr1_212956321_LD”)</li>
+<li>Set a file name
+(e.g. “1KG_trait_1_assoc_chr1_212956321_LD_100kb”)</li>
 <li>Choose extension: <code>.json</code></li>
 <li>Click: Export JSON file to platform</li>
 <li>Select your Project and Click: Confirm</li>
 <li>Click: Upload</li>
 </ul>
-<p>You need to select the Genome Build that matches your data:</p>
-<ul>
-<li>Change the Genome Build to GRCh38 for this dataset</li>
-</ul>
+<p>Note that the you need to select the Genome Build that matches your
+data. In this case, our data is in build GRCh38, which is the default
+setting. </p>
 <p>You can review the Initial Plot State Info to make sure everything
 looks as expected, and then make the plot!</p>
 <ul>
@@ -492,9 +495,25 @@ looks as expected, and then make the plot!</p>
 </ul>
 <p>The generated plot is interactive. You can hover over variants to see
 their chromosome, position, alleles, and association p-value. You can
-drag the figure left or right to see different sections of the plotted
-region. You can save the current figure as a .png or .svg file either
-locally or on the BioData Catalyst platform.</p>
+hover over genes to see their Ensembl gene ID and other information. You
+can drag the figure left or right to see different sections of the
+plotted region. Click on “Show Legend” to see how the color coding of
+points corresponds to LD <span class="math inline">\(r^2\)</span>
+values. Note that our data for this exercise is a subset of the whole
+chromosome – you shouldn’t expect to see large gaps with no variants
+when working with the full WGS data. You can save the current figure as
+a .png or .svg file either locally or on the BioData Catalyst platform.
+Note that the Locus Zoom plot generated as described above is saved as
+<code>1KG_trait_1_assoc_chr1_212956321_100kb_LocusZoom.svg</code> in
+your project files.</p>
+<ul>
+<li>What gene is our lead variant located in?</li>
+<li>What is the position of the second most significant variant and what
+is its LD <span class="math inline">\(r^2\)</span> value with our lead
+variant?</li>
+<li>What is the largest LD <span class="math inline">\(r^2\)</span>
+value observed at any variant with our lead variant?</li>
+</ul>
 <p>If you’ve saved your .json association results file and your .json LD
 statistics file to your Project, you can come back later and recreate
 your LocusZoom plot by selecting the “Use Your Own Data Sources” tab at
@@ -563,8 +582,8 @@ physical distance between them is ~188Mb. Therefore, we identify our
 conditional variants as those at <code>1:212956321</code> and
 <code>1:25046749</code>. </p>
 </div>
-<div id="conditoinal-null-model" class="section level3">
-<h3>Conditoinal Null Model</h3>
+<div id="conditional-null-model" class="section level3">
+<h3>Conditional Null Model</h3>
 <p>When preparing our data to run the conditional null model, we need to
 actually extract the genotype values from the GDS file. It is easiest to
 use the <code>variant.id</code> values from the GDS file, but remember
@@ -970,9 +989,16 @@ plots.</p>
 <p>Return to the LocusZoom Shiny App and make locus zoom plots indexed
 by our secondary hit at position 212951423, using both the original and
 conditional association analysis results. For the original analysis
-results, you can use the data you JSONized before. For the conditional
-analysis results, you will need to JSONize the association statistics
-from that analysis. What do you observe in these locus zoom plots?</p>
+results, you can use the association data you JSONized before, but you
+will need to re-calculate LD statistics with this variant as the
+reference. For the conditional analysis results, you will need to
+JSONize the association statistics from that analysis. What do you
+observe in these locus zoom plots? </p>
+<p>Note that the Locus Zoom plots generated as described in this
+exercise are saved as
+<code>1KG_trait_1_assoc_chr1_212951423_100kb_LocusZoom.svg</code> and
+<code>1KG_trait_1_assoc_cond_chr1_212951423_100kb_LocusZoom.svg</code>
+in your project files.</p>
 </div>
 <div id="exercise-4.4-locuszoom-shiny-app" class="section level2">
 <h2>Exercise 4.4 (LocusZoom Shiny App)</h2>

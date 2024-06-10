@@ -49,20 +49,20 @@ The [Locus Zoom Shiny App](https://locuszoom-shiny-app.bdc.sb-webapp.com/) is an
 The application requires data to be stored as a JSON file. There is a `GENESIS Data JSONizer` tool that converts single-variant association test results .RData file as output by the `GENESIS Single Variant Association Testing` app into the required JSON file. This tool also calculates the linkage disequilibrium (LD) measures required to make the LocusZoom plot for the selected variants.
 
 - Click the "GENESIS Data JSONizer" tab at the top of the screen
-- Select Input Files
+- Select Input Files from your Project
   - GDS file: `1KG_phase3_GRCh38_subset_chr1.gds`
-  - .RData file: `1KG_trait_1_chr1.RData`
+  - .RData file: `1KG_trait_1_assoc_chr1.RData`
 - JSONizer parameters
   - Check: "Specify variant and a flanking region around it"
   - Select the position of the variant of interest: 212956321
-  - Specify flanking region: 50000 (i.e. 50kb in each direction).
+  - Specify flanking region: 100000 (i.e. 100kb in each direction).
   - Select test type: score
 - Click: JSONize
   
 You have the option to download the JSON file to your local environment or upload it to the BioData Catalyst platform and save it for later, if you desire. 
 
 - Expand: JSON File - Download and Export Form
-- Set a file name (e.g. "1KG_trait_1_chr1_212956321")
+- Set a file name (e.g. "1KG_trait_1_assoc_chr1_212956321_100kb")
 - Choose extension: `.json`
 - Click: Export JSON file to platform
 - Select your Project and Click: Confirm
@@ -73,29 +73,33 @@ There are several optional data layers you can add to your LocusZoom plot. The m
 - Expand: Option Data Layers
 - Expand: Linkage Disequilibrium
 - Select Data Source: Compute LD Data
-- Select reference variant: 1:212956321_?/? (our variant of interest)
+- Select reference variant: 1:212956321_T/C (our variant of interest)
 - Click: Calculate LD
+- Note: do not check the "use sample set file for LD calculation" button -- this allows you to select a subset of samples from your dataset
 
 You can expand the Linkage Disequilibrium Data Overview tab to see a preview of the calculated LD data, and you can download the data as a JSON file to your local environment or upload it to the BioData Catalyst platform and save it for later, if you desire.
 
 - Expand: JSON File - Download and Export Form
-- Set a file name (e.g. "1KG_trait_1_chr1_212956321_LD")
+- Set a file name (e.g. "1KG_trait_1_assoc_chr1_212956321_LD_100kb")
 - Choose extension: `.json`
 - Click: Export JSON file to platform
 - Select your Project and Click: Confirm
 - Click: Upload
 
-You need to select the Genome Build that matches your data:
-
-- Change the Genome Build to GRCh38 for this dataset
+Note that the you need to select the Genome Build that matches your data. In this case, our data is in build GRCh38, which is the default setting. \n
 
 You can review the Initial Plot State Info to make sure everything looks as expected, and then make the plot!
 
 - Click: Generate plot
 
-The generated plot is interactive. You can hover over variants to see their chromosome, position, alleles, and association p-value. You can drag the figure left or right to see different sections of the plotted region. You can save the current figure as a .png or .svg file either locally or on the BioData Catalyst platform. 
+The generated plot is interactive. You can hover over variants to see their chromosome, position, alleles, and association p-value. You can hover over genes to see their Ensembl gene ID and other information. You can drag the figure left or right to see different sections of the plotted region. Click on "Show Legend" to see how the color coding of points corresponds to LD $r^2$ values. Note that our data for this exercise is a subset of the whole chromosome -- you shouldn't expect to see large gaps with no variants when working with the full WGS data. You can save the current figure as a .png or .svg file either locally or on the BioData Catalyst platform. Note that the Locus Zoom plot generated as described above is saved as `1KG_trait_1_assoc_chr1_212956321_100kb_LocusZoom.svg` in your project files.
+
+- What gene is our lead variant located in?
+- What is the position of the second most significant variant and what is its LD $r^2$ value with our lead variant?
+- What is the largest LD $r^2$ value observed at any variant with our lead variant?
 
 If you've saved your .json association results file and your .json LD statistics file to your Project, you can come back later and recreate your LocusZoom plot by selecting the "Use Your Own Data Sources" tab at the top of the LocusZoom Shiny App page. This time, rather than JSONizing the data, you can select the .json files as input, and set the plotting parameters the same as we did above.
+
 
 
 ## Conditional Analysis
@@ -120,7 +124,7 @@ assoc[assoc$Score.pval < 5e-8, ]
 
 In our original association analysis, we found that there were 6 genome-wide significant variants at two distinct loci. In the particular example here, it is pretty clear that we can consider our hits as two distinct loci, as they are at opposite ends of the chromosome and the physical distance between them is ~188Mb. Therefore, we identify our conditional variants as those at `1:212956321` and `1:25046749`. \n
 
-### Conditoinal Null Model
+### Conditional Null Model
 
 When preparing our data to run the conditional null model, we need to actually extract the genotype values from the GDS file. It is easiest to use the `variant.id` values from the GDS file, but remember that these are unique to your GDS file. 
 
@@ -347,7 +351,9 @@ From looking at the truncated Manhattan plot, we see that the signal from the lo
 
 ## Exercise 4.3 (LocusZoom Shiny App)
 
-Return to the LocusZoom Shiny App and make locus zoom plots indexed by our secondary hit at position 212951423, using both the original and conditional association analysis results. For the original analysis results, you can use the data you JSONized before. For the conditional analysis results, you will need to JSONize the association statistics from that analysis. What do you observe in these locus zoom plots? 
+Return to the LocusZoom Shiny App and make locus zoom plots indexed by our secondary hit at position 212951423, using both the original and conditional association analysis results. For the original analysis results, you can use the association data you JSONized before, but you will need to re-calculate LD statistics with this variant as the reference. For the conditional analysis results, you will need to JSONize the association statistics from that analysis. What do you observe in these locus zoom plots? \n
+
+Note that the Locus Zoom plots generated as described in this exercise are saved as `1KG_trait_1_assoc_chr1_212951423_100kb_LocusZoom.svg` and `1KG_trait_1_assoc_cond_chr1_212951423_100kb_LocusZoom.svg` in your project files.
 
 
 
