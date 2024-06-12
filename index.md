@@ -41,7 +41,7 @@ NOTE: All times are Eastern Daylight Time (GMT-04:00)
 | 1:30pm-1:35pm | Introduction | [Slides](https://docs.google.com/presentation/d/1O0gim1o65cBHpPhm9yad6qcdS1q_DjZn_9nbnWdMUlQ/preview?slide=id.p) | |
 | 1:35pm-3:00pm | Intro to Cloud Computing for WGS Data Analysis <br> Intro to GDS Tutorial | [Slides](https://docs.google.com/presentation/d/1SVbxImtUE0VsEHzl8mpj2oXBdT_Alw8twkj1CX8efLY/preview?slide=id.p) | [.Rmd](https://github.com/UW-GAC/SISG_2024/blob/main/01_gds_intro.Rmd) \| [.html](https://htmlpreview.github.io/?https://github.com/UW-GAC/SISG_2024/blob/main/01_gds_intro.html) |
 | 3:00pm-3:30pm | _Coffee Break_ | | |
-| 3:30pm-5:00pm | GWAS | [Slides](https://drive.google.com/file/d/1QvaRc5n1TI85qPAHTj3SuKRWYo1Flmaf/view?usp=drive_link) | [.Rmd](https://github.com/UW-GAC/SISG_2024/blob/main/02_GWAS.Rmd) \| [.html](https://htmlpreview.github.io/?https://github.com/UW-GAC/SISG_2024/blob/main/02_GWAS.html) |
+| 3:30pm-5:00pm | GWAS | [Slides](https://drive.google.com/file/d/12XdddIj0Gb5UlJRIIsHdo8nF112X4Nwx/view?usp=drive_link) | [.Rmd](https://github.com/UW-GAC/SISG_2024/blob/main/02_GWAS.Rmd) \| [.html](https://htmlpreview.github.io/?https://github.com/UW-GAC/SISG_2024/blob/main/02_GWAS.html) |
 | Extra | Population Structure and Relatedness Tutorial | | [.Rmd](https://github.com/UW-GAC/SISG_2024/blob/main/02.A_pop_structure_relatedness.Rmd) \| [.html](https://htmlpreview.github.io/?https://github.com/UW-GAC/SISG_2024/blob/main/02.A_pop_structure_relatedness.html)
 
 **Thursday, June 13th**
