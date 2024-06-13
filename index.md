@@ -41,14 +41,14 @@ NOTE: All times are Eastern Daylight Time (GMT-04:00)
 | 1:30pm-1:35pm | Introduction | [Slides](https://docs.google.com/presentation/d/1O0gim1o65cBHpPhm9yad6qcdS1q_DjZn_9nbnWdMUlQ/preview?slide=id.p) | |
 | 1:35pm-3:00pm | Intro to Cloud Computing for WGS Data Analysis <br> Intro to GDS Tutorial | [Slides](https://docs.google.com/presentation/d/1SVbxImtUE0VsEHzl8mpj2oXBdT_Alw8twkj1CX8efLY/preview?slide=id.p) | [.Rmd](https://github.com/UW-GAC/SISG_2024/blob/main/01_gds_intro.Rmd) \| [.html](https://htmlpreview.github.io/?https://github.com/UW-GAC/SISG_2024/blob/main/01_gds_intro.html) |
 | 3:00pm-3:30pm | _Coffee Break_ | | |
-| 3:30pm-5:00pm | GWAS | [Slides](https://drive.google.com/file/d/1QvaRc5n1TI85qPAHTj3SuKRWYo1Flmaf/view?usp=drive_link) | [.Rmd](https://github.com/UW-GAC/SISG_2024/blob/main/02_GWAS.Rmd) \| [.html](https://htmlpreview.github.io/?https://github.com/UW-GAC/SISG_2024/blob/main/02_GWAS.html) |
+| 3:30pm-5:00pm | GWAS | [Slides](https://drive.google.com/file/d/12XdddIj0Gb5UlJRIIsHdo8nF112X4Nwx/view?usp=drive_link) | [.Rmd](https://github.com/UW-GAC/SISG_2024/blob/main/02_GWAS.Rmd) \| [.html](https://htmlpreview.github.io/?https://github.com/UW-GAC/SISG_2024/blob/main/02_GWAS.html) |
 | Extra | Population Structure and Relatedness Tutorial | | [.Rmd](https://github.com/UW-GAC/SISG_2024/blob/main/02.A_pop_structure_relatedness.Rmd) \| [.html](https://htmlpreview.github.io/?https://github.com/UW-GAC/SISG_2024/blob/main/02.A_pop_structure_relatedness.html)
 
 **Thursday, June 13th**
 
 | Time | Topic | Lecture | Tutorials/Exercises |
 | --- | --- | --- | --- |
-| 8:30am-10:00am | GWAS: Advanced Model Extenstions | [Slides](https://drive.google.com/file/d/1Fam4_KTQYRl20vANVkIbHm8TxgTLke5h/view?usp=drive_link) | [.Rmd](https://github.com/UW-GAC/SISG_2024/blob/main/03_advanced_GWAS.Rmd) \| [.html](https://htmlpreview.github.io/?https://github.com/UW-GAC/SISG_2024/blob/main/03_advanced_GWAS.html) |
+| 8:30am-10:00am | GWAS: Advanced Model Extenstions | [Slides](https://drive.google.com/file/d/1BYIcH_i7-iyPIU--mqpWweEc4fEKr7CA/view?usp=drive_link) | [.Rmd](https://github.com/UW-GAC/SISG_2024/blob/main/03_advanced_GWAS.Rmd) \| [.html](https://htmlpreview.github.io/?https://github.com/UW-GAC/SISG_2024/blob/main/03_advanced_GWAS.html) |
 | Extra | GENESIS Model Explorer Tutorial | | [.Rmd](https://github.com/UW-GAC/SISG_2024/blob/main/03.A_GENESIS_model_explorer.Rmd) \| [.html](https://htmlpreview.github.io/?https://github.com/UW-GAC/SISG_2024/blob/main/03.A_GENESIS_model_explorer.html)
 | 10:00am-10:30am | _Coffee Break_ | | |
 | 10:30am-12:00pm | Leveraging Multi-Ancestry Data: Lecture | [Slides](https://docs.google.com/presentation/d/1tXdJ1ti1kOBgQhD1M_LTB7WOQZ2r9HmJ/preview?slide=id.p1) |
@@ -64,7 +64,7 @@ NOTE: All times are Eastern Daylight Time (GMT-04:00)
 | --- | --- | --- | --- |
 | 8:30am-10:00am | Variant Annotation: Part 2 <br> UCSC Genome Browser and FAVOR Tutorial | [Slides](https://docs.google.com/presentation/d/1W4A_XSPKwYSIJnzO9YmFh478CD4bT7Wv/preview?slide=id.p29) | [.docx](https://docs.google.com/document/d/1M1AeVvF0o7-g-ASouXGVXm96pf2ucxmI/preview) \| [chr16 SNPS](https://drive.google.com/file/d/1wIsk7rJlcfodfgQwLV-I8Ofh23GhqN5d/view?usp=drive_link) \| [KEY](https://docs.google.com/document/d/1PJcxgAPblVnGcfDsY_ns8A4mi8yFSshZ/preview) |
 | 10:00am-10:30am | _Coffee Break_ | | |
-| 10:30am-12:00pm | Multi-Variant Association Tests | [Slides](https://drive.google.com/file/d/1Gp2G-Lb7z44okN8twGpltBZR_zlQDUa7/view?usp=drive_link) | [.Rmd](https://github.com/UW-GAC/SISG_2024/blob/main/06_aggregate_tests.Rmd) \| [.html](https://htmlpreview.github.io/?https://github.com/UW-GAC/SISG_2024/blob/main/06_aggregate_tests.html)
+| 10:30am-12:00pm | Multi-Variant Association Tests | [Slides](https://drive.google.com/file/d/1tSfrtT2TWA7MKtFRJUldZX-QWl-9Qc_Q/view?usp=drive_link) | [.Rmd](https://github.com/UW-GAC/SISG_2024/blob/main/06_aggregate_tests.Rmd) \| [.html](https://htmlpreview.github.io/?https://github.com/UW-GAC/SISG_2024/blob/main/06_aggregate_tests.html)
 | 12:00pm-1:30pm | _Lunch Break_ | | |
 | 1:30pm-3:00pm | STAAR | [Slides](https://docs.google.com/presentation/d/1svNLntJqOfqrwHhY3Gr39aON53pgz_0T/preview?slide=id.p1) | [.Rmd](https://github.com/UW-GAC/SISG_2024/blob/main/07_STAAR.Rmd) \| [.html](https://htmlpreview.github.io/?https://github.com/UW-GAC/SISG_2024/blob/main/07_STAAR.html) |
 | 3:00pm-3:30pm | _Coffee Break_ | | |
